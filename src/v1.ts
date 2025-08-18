@@ -7,7 +7,7 @@ import { LiquidityPool } from "./liquidity";
 const liquidationPenalty = 0.15; // kept for reference if you later want to model post-liquidation losses
 const loanToValue = 0.4; // base LTV for new borrows
 const liquidationThreshold = 0.6; // LLTV used for liquidation checks
-const availableUsdcSupply = 200000;
+const availableUsdcSupply = 2000000;
 
 // Collateral state
 const rzrSupply = 652_183;
@@ -15,7 +15,7 @@ const rzrStaked = 231_693;
 const rzrSupplyOwnedByTreasuryUnstaked = 304_153.5;
 const rzrInLstRzrLP = 4_000;
 const rzrInLiquidityPool = 55_260.24910078;
-const stakedRzrInWithdrawalQueue = 100_000;
+const stakedRzrInWithdrawalQueue = 2737;
 
 const rzrWithHolders =
   rzrSupply - rzrStaked - rzrSupplyOwnedByTreasuryUnstaked - rzrInLiquidityPool; // 61076.25089922
@@ -96,6 +96,8 @@ const defaultScenarios: StressScenario[] = [
   },
   { name: "ETH -15%", rzrSold: 0, ethPriceMultiplier: 0.85 },
   { name: "ETH -30%", rzrSold: 0, ethPriceMultiplier: 0.7 },
+  { name: "ETH -50%", rzrSold: 0, ethPriceMultiplier: 0.5, warningOnly: true },
+  { name: "ETH -80%", rzrSold: 0, ethPriceMultiplier: 0.2, warningOnly: true },
   {
     name: "ETH -30% + 30k RZR sold",
     rzrSold: 30_000,
@@ -149,9 +151,7 @@ function minHealthUnderScenario(
   }
 
   // 3) Apply stress: market sells into RZR/ETH AMM, then ETH USD shock
-  if (scenario.rzrSold > 0) {
-    pool.swapRzrForEth(scenario.rzrSold);
-  }
+  if (scenario.rzrSold > 0) pool.swapRzrForEth(scenario.rzrSold);
   const shockedEth = ethSpot * scenario.ethPriceMultiplier;
 
   // 4) Compute health of all positions at shocked state
@@ -186,6 +186,7 @@ function isBorrowSafeAcrossScenarios(
       poolAtStart
     );
     if (!(minHealth >= 1)) {
+      console.log(`minHealth: ${minHealth}, scenario: ${s.name}`);
       return false;
     }
   }
@@ -213,7 +214,7 @@ export function solveMaxBorrow(
 
   let lo = 0;
   let hi = cap;
-  let best = 0;
+  let best = (lo + hi) / 2;
 
   // Quick check: if even $0 is unsafe (shouldn't happen), return 0
   if (
@@ -231,6 +232,7 @@ export function solveMaxBorrow(
       ethSpot,
       poolAtStart
     );
+    console.log(`lo: ${lo}, hi: ${hi}, mid: ${mid}, ok: ${ok}`);
     if (ok) {
       best = mid;
       lo = mid; // try more
@@ -254,6 +256,8 @@ export function solveMaxBorrow(
     ),
   }));
 
+  console.log("best", diag);
+
   return { maxSafeBorrowUsdc: Math.floor(best), diagnostics: diag };
 }
 
@@ -276,29 +280,27 @@ function run() {
 
   console.log("\nScenario diagnostics (min health across positions)");
   for (const d of diagnostics) {
-    const tag = d.warningOnly ? " [warning]" : "";
+    const tag = d.warningOnly ? "[warning]" : "[normal]";
     let colorStart = "";
     let colorEnd = "";
 
-    if (d.minHealth < 1) {
+    if (d.minHealth < 1 && !d.warningOnly) {
       colorStart = "\x1b[31m"; // Red for dangerous scenarios (health < 1)
       colorEnd = "\x1b[0m";
-    } else if (d.warningOnly) {
+    } else if (d.warningOnly && d.minHealth < 1) {
       colorStart = "\x1b[33m"; // Yellow for warnings
       colorEnd = "\x1b[0m";
     }
 
     console.log(
-      `${colorStart}- ${d.scenario}${tag}: minHealth=${d.minHealth.toFixed(
+      `${colorStart}- ${d.scenario} ${tag}: minHealth=${d.minHealth.toFixed(
         3
-      )} | shockedEth=${d.shockedEth.toFixed(2)} | RZR(USD)=${d.poolAfter
+      )} | ETH(USD)=${d.shockedEth.toFixed(2)} | RZR(USD)=${d.poolAfter
         .getRzrPriceInUsd(d.shockedEth)
         .toFixed(4)}${colorEnd}`
     );
   }
 }
-
-run();
 
 /*************************************************
  * Notes / Extensions:
@@ -311,3 +313,4 @@ run();
  *    not used in the pre-breach feasibility check.
  * 4) To model slippage fees, embed them in LiquidityPool.swapRzrForEth().
  *************************************************/
+run();

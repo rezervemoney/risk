@@ -5,7 +5,7 @@
   "scripts": {
     "build": "npm run clean && tsc",
     "clean": "rimraf dist",
-    "start": "ts-node src/index.ts"
+    "start": "ts-node src/v1.ts"
   },
   "author": "",
   "license": "ISC",
