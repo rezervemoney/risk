@@ -69,30 +69,44 @@ export type StressScenario = {
   name: string;
   rzrSold: number; // amount of RZR market-sold into the AMM
   ethPriceMultiplier: number; // ETH shock relative to base spot price
+  warningOnly?: boolean; // if true, failing this scenario does not block borrowing (reported as warning)
 };
 
 // Default scenario set. You can extend/replace this at runtime.
 const defaultScenarios: StressScenario[] = [
   { name: "No stress", rzrSold: 0, ethPriceMultiplier: 1.0 },
   { name: "Mild sell (5k)", rzrSold: 5_000, ethPriceMultiplier: 1.0 },
-  { name: "Moderate sell (30k)", rzrSold: 30_000, ethPriceMultiplier: 1.0 },
+  {
+    name: "Moderate sell (30k)",
+    rzrSold: 30_000,
+    ethPriceMultiplier: 1.0,
+    warningOnly: true,
+  },
   {
     name: "All holders sell",
     rzrSold: rzrWithHolders,
     ethPriceMultiplier: 1.0,
+    warningOnly: true,
   },
   {
     name: "Max pressure",
     rzrSold: estimatedMaximumSellPressure,
     ethPriceMultiplier: 1.0,
+    warningOnly: true,
   },
   { name: "ETH -15%", rzrSold: 0, ethPriceMultiplier: 0.85 },
   { name: "ETH -30%", rzrSold: 0, ethPriceMultiplier: 0.7 },
-  { name: "ETH -30% + 30k RZR sold", rzrSold: 30_000, ethPriceMultiplier: 0.7 },
+  {
+    name: "ETH -30% + 30k RZR sold",
+    rzrSold: 30_000,
+    ethPriceMultiplier: 0.7,
+    warningOnly: true,
+  },
   {
     name: "ETH -30% + Max pressure",
     rzrSold: estimatedMaximumSellPressure,
     ethPriceMultiplier: 0.7,
+    warningOnly: true,
   },
   { name: "ETH +15%", rzrSold: 0, ethPriceMultiplier: 1.15 },
 ];
@@ -148,10 +162,11 @@ function minHealthUnderScenario(
     (m, p) => Math.min(m, p.healthScore),
     +Infinity
   );
+
   return { minHealth, metrics, poolAfter: pool, shockedEth };
 }
 
-// Feasibility check: safe if health >= 1 in *every* scenario
+// Feasibility check: safe if health >= 1 in *every* non-warning scenario
 function isBorrowSafeAcrossScenarios(
   borrowUsdc: number,
   scenarios: StressScenario[] = defaultScenarios,
@@ -160,6 +175,7 @@ function isBorrowSafeAcrossScenarios(
   poolAtStart: LiquidityPool = lp0
 ) {
   for (const s of scenarios) {
+    if (s.warningOnly) continue; // ignore warnings in gating
     const { minHealth } = minHealthUnderScenario(
       borrowUsdc,
       s,
@@ -169,7 +185,9 @@ function isBorrowSafeAcrossScenarios(
       liquidationThreshold,
       poolAtStart
     );
-    if (!(minHealth >= 1)) return false;
+    if (!(minHealth >= 1)) {
+      return false;
+    }
   }
   return true;
 }
@@ -200,8 +218,9 @@ export function solveMaxBorrow(
   // Quick check: if even $0 is unsafe (shouldn't happen), return 0
   if (
     !isBorrowSafeAcrossScenarios(0, scenarios, positions, ethSpot, poolAtStart)
-  )
+  ) {
     return { maxSafeBorrowUsdc: 0, diagnostics: [] };
+  }
 
   while (hi - lo > tolerance) {
     const mid = (lo + hi) / 2;
@@ -223,6 +242,7 @@ export function solveMaxBorrow(
   // Also return a diagnostic breakdown at the found solution
   const diag = scenarios.map((s) => ({
     scenario: s.name,
+    warningOnly: !!s.warningOnly,
     ...minHealthUnderScenario(
       best,
       s,
@@ -256,12 +276,24 @@ function run() {
 
   console.log("\nScenario diagnostics (min health across positions)");
   for (const d of diagnostics) {
+    const tag = d.warningOnly ? " [warning]" : "";
+    let colorStart = "";
+    let colorEnd = "";
+
+    if (d.minHealth < 1) {
+      colorStart = "\x1b[31m"; // Red for dangerous scenarios (health < 1)
+      colorEnd = "\x1b[0m";
+    } else if (d.warningOnly) {
+      colorStart = "\x1b[33m"; // Yellow for warnings
+      colorEnd = "\x1b[0m";
+    }
+
     console.log(
-      `- ${d.scenario}: minHealth=${d.minHealth.toFixed(
+      `${colorStart}- ${d.scenario}${tag}: minHealth=${d.minHealth.toFixed(
         3
       )} | shockedEth=${d.shockedEth.toFixed(2)} | RZR(USD)=${d.poolAfter
         .getRzrPriceInUsd(d.shockedEth)
-        .toFixed(4)}`
+        .toFixed(4)}${colorEnd}`
     );
   }
 }
