@@ -149,6 +149,23 @@ const positionsWithLiquidation = positions.map(mapLiquidationPrice);
 // ]
 console.log(positionsWithLiquidation);
 
+// Helper function to simulate selling RZR and see the impact on the health scores.
+const simulateSellRzr = (rzrSold: number, newEthPrice: number) => {
+  const backup = liquidityPool.clone();
+  console.log("\nRZR sold: ", rzrSold, "with ETH price: ", newEthPrice);
+
+  liquidityPool.swapRzrForEth(rzrSold);
+  liquidityPool.log("LP Reserves after selling RZR:", newEthPrice);
+
+  const newPositions = positions.map(mapLiquidationPrice);
+  console.log(
+    "New positions health scores after selling RZR:",
+    newPositions.map((p) => p.healthScore)
+  );
+
+  liquidityPool.copy(backup);
+};
+
 // Estimate the maximum amount of USDC that we can borrow
 // and use that for our exposure to ETH.
 const estimateMaxBorrowableAndExposure = () => {
@@ -187,38 +204,21 @@ const estimateMaxBorrowableAndExposure = () => {
   // 2. If users do try to sell RZR, how much price impact will it have on the
   // RZR and ETH price? Ideally we want to make sure that we only liquidate if
   // the price impact is minimal.
-  const rzrSold = 5000;
-  console.log("\nRZR sold: ", rzrSold);
 
-  liquidityPool.swapRzrForEth(rzrSold);
-
+  // RZR sold:  5000 with ETH price:  4200
   // LP Reserves after selling RZR: ethReserve 184.38 rzrReserve 60983.17 price 12.7
-  liquidityPool.log("LP Reserves after selling RZR:", ethPrice);
+  // New positions health scores after selling RZR: [ 2.4526239340763922, 1.3770152532652298 ]
+  simulateSellRzr(5000, ethPrice);
 
-  // New positions after selling RZR: [
-  //   {
-  //     healthScore: 1.8394679505572942,
-  //     ltv: 0.32618127422020105,
-  //     collateralRzr: 12000,
-  //     debtUsdc: 50000,
-  //     lltv: 0.8,
-  //     ethExposure: 11.834401863557659,
-  //     ethPrice: 4224.97060489,
-  //     rzrLiquidationPrice: 6.944444444444445
-  //   },
-  //   {
-  //     healthScore: 1.3770152532652298,
-  //     ltv: 0.4357250208937466,
-  //     collateralRzr: 1807.30798995225,
-  //     debtUsdc: 10000,
-  //     lltv: 0.4,
-  //     ethExposure: 2.380952380952381,
-  //     ethPrice: 4200,
-  //     rzrLiquidationPrice: 9.221818726705795
-  //   }
-  // ]
-  const newPositions = positions.map(mapLiquidationPrice);
-  console.log("\nNew positions after selling RZR:", newPositions);
+  // RZR sold:  30000 with ETH price:  4200
+  // LP Reserves after selling RZR: ethReserve 184.38 rzrReserve 85983.17 price 9.01
+  // New positions health scores after selling RZR: [ 1.739512324978205, 0.9766417800370547 ]
+  // NOTE selling 30000 RZR will drop the health score of the second position below
+  // the threshold and cause a liquidation.
+  simulateSellRzr(30000, ethPrice);
+
+  // TODO the above are some guesses. What we need to do is back calculate either
+  // through brute force or by using math or a solver.
 
   // 3. For the amount of USDC that we can borrow, what LTV should we do it so that we never face
   // liquidation even if all the RZR in the withdrawal queue is sold.

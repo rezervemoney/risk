@@ -73,4 +73,14 @@ export class LiquidityPool {
     const rzr = Number(this.rzrInLiquidityPool.toFixed(2));
     console.log(msg, "ethReserve", eth, "rzrReserve", rzr, "price", price);
   }
+
+  clone() {
+    return new LiquidityPool(this.rzrInLiquidityPool, this.ethInLiquidityPool);
+  }
+
+  copy(pool: LiquidityPool) {
+    this.rzrInLiquidityPool = pool.rzrInLiquidityPool;
+    this.ethInLiquidityPool = pool.ethInLiquidityPool;
+    this.k = this.rzrInLiquidityPool * this.ethInLiquidityPool;
+  }
 }
