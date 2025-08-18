@@ -33,9 +33,9 @@ export class LiquidityPool {
     ethReceived: number;
     newRzrPrice: number;
   } {
-    this.rzrInLiquidityPool -= rzrSpent;
-    const newRzrInPool = this.k / this.ethInLiquidityPool;
-    const amountOut = newRzrInPool - this.rzrInLiquidityPool;
+    this.rzrInLiquidityPool += rzrSpent;
+    const newEthInPool = this.k / this.rzrInLiquidityPool;
+    const amountOut = this.ethInLiquidityPool - newEthInPool;
     return {
       ethReceived: amountOut,
       newRzrPrice: this.ethInLiquidityPool / this.rzrInLiquidityPool,

@@ -154,7 +154,7 @@ console.log(positionsWithLiquidation);
 // Estimate the maximum amount of USDC that we can borrow
 // and use that for our exposure to ETH.
 const estimateMaxBorrowableAndExposure = () => {
-  // (ethReserve=182.00, rzrReserve=55260.25, price=13.83)
+  // LP Reserves before: ethReserve 182 rzrReserve 55260.25 price 13.83
   liquidityPool.log("LP Reserves before:", ethPrice);
 
   // TODO - What we need to calculate:
@@ -173,7 +173,7 @@ const estimateMaxBorrowableAndExposure = () => {
   console.log("ETH bought with USDC debt: ", newEthExposure); // 2.3809428104761904
   console.log("RZR minted for liquidity: ", newRzrMinted); // 722.9231959809
 
-  // (ethReserve=184.38, rzrReserve=55983.17, price=13.83)
+  // LP Reserves after: ethReserve 184.38 rzrReserve 55983.17 price 13.83
   liquidityPool.log("LP Reserves after:", ethPrice);
 
   // 2. If users do try to sell RZR, how much price impact will it have on the
@@ -183,9 +183,10 @@ const estimateMaxBorrowableAndExposure = () => {
   console.log("RZR sold: ", rzrSold);
 
   liquidityPool.swapRzrForEth(rzrSold);
+
+  // LP Reserves after selling RZR: ethReserve 184.38 rzrReserve 60983.17 price 12.7
   liquidityPool.log("LP Reserves after selling RZR:", ethPrice);
 
-  // Assume that 1000 ETH is sold.
   //
   // 3. For the amount of USDC that we can borrow, what LTV should we do it so that we never face
   // liquidation even if all the RZR in the withdrawal queue is sold.
