@@ -53,13 +53,13 @@ const computePositionMetrics = (
  * Existing positions (unchanged semantics)
  *************************************************/
 const basePositions: IPosition[] = [
-  {
-    collateralRzr: 12000,
-    debtUsdc: 10000,
-    lltv: 0.8,
-    ethExposure: 11.834401863557658981,
-    ethPrice: 4224.97060489, // entry price of ETH exposure (not used for liquidation)
-  },
+  // {
+  //   collateralRzr: 12000,
+  //   debtUsdc: 10000,
+  //   lltv: 0.8,
+  //   ethExposure: 11.834401863557658981,
+  //   ethPrice: 4224.97060489, // entry price of ETH exposure (not used for liquidation)
+  // },
 ];
 
 /*************************************************
@@ -178,7 +178,8 @@ function isBorrowSafeAcrossScenarios(
   scenarios: StressScenario[] = defaultScenarios,
   positions: IPosition[] = basePositions,
   ethSpot: number = baseEthPrice,
-  poolAtStart: LiquidityPool = lp0
+  poolAtStart: LiquidityPool = lp0,
+  ltvForNew: number = loanToValue
 ) {
   for (const s of scenarios) {
     if (s.warningOnly) continue; // ignore warnings in gating
@@ -187,17 +188,20 @@ function isBorrowSafeAcrossScenarios(
       s,
       positions,
       ethSpot,
-      loanToValue,
+      ltvForNew,
       liquidationThreshold,
       poolAtStart
     );
-    if (!(minHealth >= 1)) return false;
+    if (!(minHealth >= 1)) {
+      console.log(`minHealth: ${minHealth}, scenario: ${s.name}`);
+      return false;
+    }
   }
   return true;
 }
 
 /*************************************************
- * Solver (binary search)
+ * Solver (binary search for both amount and LTV)
  *************************************************/
 export function solveMaxBorrow(
   scenarios: StressScenario[] = defaultScenarios,
@@ -207,6 +211,7 @@ export function solveMaxBorrow(
     positions?: IPosition[];
     ethSpot?: number;
     poolAtStart?: LiquidityPool;
+    ltvRange?: { min: number; max: number }; // LTV range to search
   }
 ) {
   const tolerance = options?.tolerance ?? 1; // $1 resolution
@@ -214,33 +219,53 @@ export function solveMaxBorrow(
   const positions = options?.positions ?? basePositions;
   const ethSpot = options?.ethSpot ?? baseEthPrice;
   const poolAtStart = options?.poolAtStart ?? lp0;
+  const ltvRange = options?.ltvRange ?? { min: 0.1, max: 0.8 }; // Default LTV range
 
-  let lo = 0;
-  let hi = cap;
-  let best = (lo + hi) / 2;
+  let bestAmount = 0;
+  let bestLtv = ltvRange.min;
 
-  // Quick check: if even $0 is unsafe (shouldn't happen), return 0
-  if (
-    !isBorrowSafeAcrossScenarios(0, scenarios, positions, ethSpot, poolAtStart)
-  ) {
-    return { maxSafeBorrowUsdc: 0, diagnostics: [] };
-  }
+  // Try different LTV values and find the best combination
+  for (let ltv = ltvRange.min; ltv <= ltvRange.max; ltv += 0.05) {
+    let lo = 0;
+    let hi = cap;
+    let bestForThisLtv = 0;
 
-  while (hi - lo > tolerance) {
-    const mid = (lo + hi) / 2;
-    const ok = isBorrowSafeAcrossScenarios(
-      mid,
-      scenarios,
-      positions,
-      ethSpot,
-      poolAtStart
-    );
-    console.log(`lo: ${lo}, hi: ${hi}, mid: ${mid}, ok: ${ok}`);
-    if (ok) {
-      best = mid;
-      lo = mid; // try more
-    } else {
-      hi = mid; // try less
+    // Quick check: if even $0 is unsafe with this LTV, skip to next LTV
+    if (
+      !isBorrowSafeAcrossScenarios(
+        0,
+        scenarios,
+        positions,
+        ethSpot,
+        poolAtStart,
+        ltv
+      )
+    ) {
+      continue;
+    }
+
+    while (hi - lo > tolerance) {
+      const mid = (lo + hi) / 2;
+      const ok = isBorrowSafeAcrossScenarios(
+        mid,
+        scenarios,
+        positions,
+        ethSpot,
+        poolAtStart,
+        ltv
+      );
+      if (ok) {
+        bestForThisLtv = mid;
+        lo = mid; // try more
+      } else {
+        hi = mid; // try less
+      }
+    }
+
+    // Update global best if this LTV gives a better result
+    if (bestForThisLtv > bestAmount) {
+      bestAmount = bestForThisLtv;
+      bestLtv = ltv;
     }
   }
 
@@ -249,17 +274,21 @@ export function solveMaxBorrow(
     scenario: s.name,
     warningOnly: !!s.warningOnly,
     ...minHealthUnderScenario(
-      best,
+      bestAmount,
       s,
       positions,
       ethSpot,
-      loanToValue,
+      bestLtv, // Use the optimal LTV
       liquidationThreshold,
       poolAtStart
     ),
   }));
 
-  return { maxSafeBorrowUsdc: Math.floor(best), diagnostics: diag };
+  return {
+    maxSafeBorrowUsdc: Math.floor(bestAmount),
+    optimalLtv: bestLtv,
+    diagnostics: diag,
+  };
 }
 
 /*************************************************
@@ -270,7 +299,7 @@ function run() {
   console.log("Base ETH spot:", baseEthPrice);
   console.log("Base RZR spot (USD):", currentRzrPriceInUsd(lp0, baseEthPrice));
 
-  const { maxSafeBorrowUsdc, diagnostics } = solveMaxBorrow();
+  const { maxSafeBorrowUsdc, optimalLtv, diagnostics } = solveMaxBorrow();
   console.log(
     "\n================ Max Safe Borrow (across default scenarios) ================"
   );
@@ -278,6 +307,7 @@ function run() {
     "Max USDC you can borrow while staying above liquidation:",
     maxSafeBorrowUsdc
   );
+  console.log("Optimal LTV for the new borrow:", optimalLtv.toFixed(3));
 
   console.log("\nScenario diagnostics (min health across positions)");
   for (const d of diagnostics) {
