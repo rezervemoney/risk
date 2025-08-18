@@ -1,4 +1,5 @@
 import { IPosition, IPositionWithLiquidation } from "./interfaces";
+import { LiquidityPool } from "./liquidity";
 
 console.log("Hello World");
 
@@ -30,14 +31,8 @@ const rzrSupply = 652183;
 // How much RZR is staked?
 const rzrStaked = 231693;
 
-// How much RZR is in the liquidity pool?
-const rzrInLiquidityPool = 100000;
-
 // How much RZR is owned by the treasury?
 const rzrSupplyOwnedByTreasury = 420000;
-
-// What is the current spot price of RZR?
-const rzrSpotPrice = 13.5;
 
 // How much RZR is in the lstRZR/RZR LP. This is important because it tells
 // us how much lstRZR can immediately exit the pool.
@@ -52,7 +47,7 @@ const stakedRzrInWithdrawalQueue = 100000;
 // ================================================
 
 // What is the current spot price of ETH?
-const currentEthPrice = 4200;
+const ethPrice = 4200;
 
 // What is the price action of ETH over the last 200 days?
 const priceActionOverLast200Days = [
@@ -69,6 +64,27 @@ const priceActionOverLast200DaysRzr = [
     price: 13.5,
   },
 ];
+
+// ================================================
+// ===== Liquidity Pool Parameters =====
+// ================================================
+
+// How much ETH is in the liquidity pool?
+const ethInLiquidityPool = 182;
+
+// How much RZR is in the liquidity pool?
+const rzrInLiquidityPool = 55260.24910078;
+
+// Creates a simple x*y=k liquidity pool.
+const liquidityPool = new LiquidityPool(rzrInLiquidityPool, ethInLiquidityPool);
+
+const currentRzrPriceInEth = liquidityPool.getRzrPrice(); // 0.0032935066881092123
+const currentRzrPriceInUsd = liquidityPool.getRzrPriceInUsd(ethPrice); // 13.832728090058692
+console.log("RZR price in ETH: ", currentRzrPriceInEth);
+console.log("RZR price in USD: ", currentRzrPriceInUsd);
+
+// What is the current spot price of RZR?
+const rzrSpotPrice = currentRzrPriceInUsd;
 
 // ================================================
 // ===== Current Lending Positions =====
@@ -93,11 +109,11 @@ const positionsWithLiquidation: IPositionWithLiquidation[] = positions.map(
     // TODO: Calculate the liquidation price of the RZR and ETH on this position guessing
     // the price of RZR and ETH.
 
-    // If ETH price goes down, then our debt USDC will be worth more.
-    // Greater chance of liquidation.
+    // If ETH price goes down, then our ETH exposure loses value.
+    // Greater chance of liquidation since we are long ETH.
 
-    // If ETH price goes up, then our debt USDC will be worth less.
-    // Less chance of liquidation.
+    // If ETH price goes up, our ETH exposure increases in value.
+    // Less chance of liquidation. Safer position.
 
     // If RZR price goes down, then our collateral RZR will be worth less.
     // Greater chance of liquidation.
@@ -107,30 +123,50 @@ const positionsWithLiquidation: IPositionWithLiquidation[] = positions.map(
 
     // If we have a position with a lot of debt USDC, then we are more vulnerable to a price drop.
 
+    const rzrLiquidationPrice =
+      position.debtUsdc / (position.collateralRzr * liquidationThreshold);
+
     return {
       ...position,
-      rzrLiquidationPrice: 0,
-      ethLiquidationPrice: 0,
+      rzrLiquidationPrice,
     };
   }
 );
 
+console.log(positionsWithLiquidation);
+
 // Estimate the maximum amount of USDC that we can borrow
 // and use that for our exposure to ETH.
 const estimateMaxBorrowableAndExposure = () => {
+  // (ethReserve=182.00, rzrReserve=55260.25, price=13.83)
+  console.log("LP Reserves before:", liquidityPool.toString(ethPrice));
+
   // TODO - What we need to calculate:
-  // 1. If our position does gets liquidated, how much price impact will it have on the
-  // RZR and ETH price? Ideally we want to make sure that we only liquidate if
-  // the price impact is minimal.
-  //
-  // 2. What is the maximum amount of USDC that we can borrow so that we are
+  // 1. What is the maximum amount of USDC that we can borrow so that we are
   // pretty much safe? Also considering the fact that we have RZR in the
   // withdrawal queue and that the borrowed USDC will be used to buy ETH which is then
   // added to the liquidity pool for RZR/ETH thereby supporting the price of RZR.
+  const maxBorrowableUsdc = 10000; // TODO: Calculate this.
+  console.log("Max borrowable USDC: ", maxBorrowableUsdc); // 10000
+
+  // Knowing that this is what we're going to do.
+  const newEthExposure = maxBorrowableUsdc / ethPrice;
+  const newRzrMinted = maxBorrowableUsdc / rzrSpotPrice;
+  liquidityPool.addLiquidity(newEthExposure, newRzrMinted);
+
+  console.log("ETH bought with USDC debt: ", newEthExposure); // 2.3809428104761904
+  console.log("RZR minted for liquidity: ", newRzrMinted); // 722.9231959809
+
+  // (ethReserve=184.38, rzrReserve=55983.17, price=13.83)
+  console.log("LP Reserves after:", liquidityPool.toString(ethPrice));
+
+  // 2. If our position does gets liquidated, how much price impact will it have on the
+  // RZR and ETH price? Ideally we want to make sure that we only liquidate if
+  // the price impact is minimal.
+
   //
   // 3. For the amount of USDC that we can borrow, what LTV should we do it so that we never face
   // liquidation even if all the RZR in the withdrawal queue is sold.
-  //
 };
 
 estimateMaxBorrowableAndExposure();

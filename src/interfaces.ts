@@ -10,5 +10,4 @@ export interface IPosition {
 
 export interface IPositionWithLiquidation extends IPosition {
   rzrLiquidationPrice: number; // Price at which the RZR position gets liquidated
-  ethLiquidationPrice: number; // Price at which the ETH position gets liquidated
 }
