@@ -30,22 +30,35 @@ const rzrSupply = 652183;
 const rzrStaked = 231693;
 
 // How much RZR is owned by the treasury?
-const rzrSupplyOwnedByTreasury = 420000;
+const rzrSupplyOwnedByTreasuryUnstaked = 304153.5;
 
 // How much RZR is in the lstRZR/RZR LP. This is important because it tells
 // us how much lstRZR can immediately exit the pool.
 const rzrInLstRzrLP = 4000;
 
+// How much RZR is in the liquidity pool?
+const rzrInLiquidityPool = 55260.24910078;
+
+// This is the amount of RZR that is not staked or owned by the treasury. Consider this as the amount of RZR
+// that is available to be sold.
+const rzrWithHolders =
+  rzrSupply - rzrStaked - rzrSupplyOwnedByTreasuryUnstaked - rzrInLiquidityPool;
+console.log("RZR with holders: ", rzrWithHolders); // 61076.25089922
+
 // This tells us how much RZR is in the withdrawal queue. ie RZR that
 // is about to exit in less than 3 days. Most likely to be sold
 const stakedRzrInWithdrawalQueue = 100000;
+
+const estimatedMaximumSellPressure =
+  rzrInLstRzrLP + stakedRzrInWithdrawalQueue + rzrWithHolders;
+console.log("Estimated maximum sell pressure: ", estimatedMaximumSellPressure); // 165076.25089922
 
 // ================================================
 // ===== ETH parameters =====
 // ================================================
 
 // What is the current spot price of ETH?
-const ethPrice = 4200;
+const currentEthPrice = 4200;
 
 // What is the price action of ETH over the last 200 days?
 const priceActionOverLast200Days = [
@@ -70,14 +83,11 @@ const priceActionOverLast200DaysRzr = [
 // How much ETH is in the liquidity pool?
 const ethInLiquidityPool = 182;
 
-// How much RZR is in the liquidity pool?
-const rzrInLiquidityPool = 55260.24910078;
-
 // Creates a simple x*y=k liquidity pool.
 const liquidityPool = new LiquidityPool(rzrInLiquidityPool, ethInLiquidityPool);
 
 const currentRzrPriceInEth = liquidityPool.getRzrPrice(); // 0.0032935066881092123
-const currentRzrPriceInUsd = liquidityPool.getRzrPriceInUsd(ethPrice); // 13.832728090058692
+const currentRzrPriceInUsd = liquidityPool.getRzrPriceInUsd(currentEthPrice); // 13.832728090058692
 console.log("RZR price in ETH: ", currentRzrPriceInEth);
 console.log("RZR price in USD: ", currentRzrPriceInUsd);
 
@@ -168,7 +178,7 @@ const simulateSellRzr = (rzrSold: number, newEthPrice: number) => {
 
 // Estimate the maximum amount of USDC that we can borrow
 // and use that for our exposure to ETH.
-const estimateMaxBorrowableAndExposure = () => {
+const estimateMaxBorrowableAndExposure = (ethPrice: number) => {
   // LP Reserves before: ethReserve 182 rzrReserve 55260.25 price 13.83
   liquidityPool.log("\nLP Reserves before:", ethPrice);
 
@@ -214,14 +224,25 @@ const estimateMaxBorrowableAndExposure = () => {
   // LP Reserves after selling RZR: ethReserve 184.38 rzrReserve 85983.17 price 9.01
   // New positions health scores after selling RZR: [ 1.739512324978205, 0.9766417800370547 ]
   // NOTE selling 30000 RZR will drop the health score of the second position below
-  // the threshold and cause a liquidation.
+  // the threshold and cause a liquidation for.
   simulateSellRzr(30000, ethPrice);
+
+  // RZR sold:  220336.5 with ETH price:  4200
+  // LP Reserves after selling RZR: ethReserve 184.38 rzrReserve 276319.67 price 2.8
+  // New positions health scores after selling RZR: [ 0.5412889596594005, 0.3039043791096944 ]
+  // NOTE if everyone sell then the health score of the both positions will drop below the threshold
+  // and cause a liquidation.
+  simulateSellRzr(estimatedMaximumSellPressure, ethPrice);
+
+  // RZR sold:  61076.25089922 with ETH price:  4200
+  // LP Reserves after selling RZR: ethReserve 184.38 rzrReserve 117059.42 price 6.62
+  // New positions health scores after selling RZR: [ 1.2777167686921889, 0.7173686334038293 ]
+  // NOTE if all holders sell then the health score of the the second position will drop below the threshold
+  // and cause a liquidation.
+  simulateSellRzr(rzrWithHolders, ethPrice);
 
   // TODO the above are some guesses. What we need to do is back calculate either
   // through brute force or by using math or a solver.
-
-  // 3. For the amount of USDC that we can borrow, what LTV should we do it so that we never face
-  // liquidation even if all the RZR in the withdrawal queue is sold.
 };
 
-estimateMaxBorrowableAndExposure();
+estimateMaxBorrowableAndExposure(currentEthPrice);
