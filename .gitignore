@@ -1,0 +1,26 @@
+# Generated directories:
+.nyc_output/
+coverage/
+dist/
+node_modules/
+.env
+config.json
+config1.json
+# Project files:
+*.sublime-*
+src/test/
+**/*.map
+# **/*.js
+**/*.d.ts
+
+/*.log
+/tmp/*
+!/tmp/.gitkeep
+
+config.backup.json
+dump
+dump-v2
+config.prod.json
+config.staging.json
+information.md
+overview.md
