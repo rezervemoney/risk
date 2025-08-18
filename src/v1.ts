@@ -55,7 +55,7 @@ const computePositionMetrics = (
 const basePositions: IPosition[] = [
   {
     collateralRzr: 12000,
-    debtUsdc: 50000,
+    debtUsdc: 10000,
     lltv: 0.8,
     ethExposure: 11.834401863557658981,
     ethPrice: 4224.97060489, // entry price of ETH exposure (not used for liquidation)
@@ -96,12 +96,18 @@ const defaultScenarios: StressScenario[] = [
   },
   { name: "ETH -15%", rzrSold: 0, ethPriceMultiplier: 0.85 },
   { name: "ETH -30%", rzrSold: 0, ethPriceMultiplier: 0.7 },
-  { name: "ETH -50%", rzrSold: 0, ethPriceMultiplier: 0.5, warningOnly: true },
+  { name: "ETH -50%", rzrSold: 0, ethPriceMultiplier: 0.5, warningOnly: false },
   { name: "ETH -80%", rzrSold: 0, ethPriceMultiplier: 0.2, warningOnly: true },
   {
     name: "ETH -30% + 30k RZR sold",
     rzrSold: 30_000,
     ethPriceMultiplier: 0.7,
+    warningOnly: true,
+  },
+  {
+    name: "ETH -50% + 30k RZR sold",
+    rzrSold: 30_000,
+    ethPriceMultiplier: 0.5,
     warningOnly: true,
   },
   {
@@ -185,10 +191,7 @@ function isBorrowSafeAcrossScenarios(
       liquidationThreshold,
       poolAtStart
     );
-    if (!(minHealth >= 1)) {
-      console.log(`minHealth: ${minHealth}, scenario: ${s.name}`);
-      return false;
-    }
+    if (!(minHealth >= 1)) return false;
   }
   return true;
 }
@@ -255,8 +258,6 @@ export function solveMaxBorrow(
       poolAtStart
     ),
   }));
-
-  console.log("best", diag);
 
   return { maxSafeBorrowUsdc: Math.floor(best), diagnostics: diag };
 }
