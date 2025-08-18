@@ -50,7 +50,25 @@ const stakedRzrInWithdrawalQueue = 100000;
 // ================================================
 // ===== ETH parameters =====
 // ================================================
+
+// What is the current spot price of ETH?
 const currentEthPrice = 4200;
+
+// What is the price action of ETH over the last 200 days?
+const priceActionOverLast200Days = [
+  {
+    date: "2024-01-01",
+    price: 4200,
+  },
+];
+
+// What is the price action of RZR over the last 200 days?
+const priceActionOverLast200DaysRzr = [
+  {
+    date: "2024-01-01",
+    price: 13.5,
+  },
+];
 
 // ================================================
 // ===== Current Lending Positions =====
@@ -64,8 +82,8 @@ const positions: IPosition[] = [
     healthScore: 2.5,
     ltv: 0.3195,
     lltv: 0.8,
-    ethExposure: 11.834401863557658981,
-    ethPrice: 4224.97060489,
+    ethExposure: 11.834401863557658981, // how much ETH we got by selling the debt USDC
+    ethPrice: 4224.97060489, // the price at which we got the ETH
   },
 ];
 
@@ -74,6 +92,21 @@ const positionsWithLiquidation: IPositionWithLiquidation[] = positions.map(
   (position) => {
     // TODO: Calculate the liquidation price of the RZR and ETH on this position guessing
     // the price of RZR and ETH.
+
+    // If ETH price goes down, then our debt USDC will be worth more.
+    // Greater chance of liquidation.
+
+    // If ETH price goes up, then our debt USDC will be worth less.
+    // Less chance of liquidation.
+
+    // If RZR price goes down, then our collateral RZR will be worth less.
+    // Greater chance of liquidation.
+
+    // If RZR price goes up, then our collateral RZR will be worth more.
+    // Less chance of liquidation.
+
+    // If we have a position with a lot of debt USDC, then we are more vulnerable to a price drop.
+
     return {
       ...position,
       rzrLiquidationPrice: 0,
@@ -85,10 +118,19 @@ const positionsWithLiquidation: IPositionWithLiquidation[] = positions.map(
 // Estimate the maximum amount of USDC that we can borrow
 // and use that for our exposure to ETH.
 const estimateMaxBorrowableAndExposure = () => {
-  // TODO
-  // What we need to calculate:
-  // 1. If our position gets liquidated, how much bad debt will be created?
-  // Ideally we want to make sure that no bad debt is created.
+  // TODO - What we need to calculate:
+  // 1. If our position does gets liquidated, how much price impact will it have on the
+  // RZR and ETH price? Ideally we want to make sure that we only liquidate if
+  // the price impact is minimal.
+  //
+  // 2. What is the maximum amount of USDC that we can borrow so that we are
+  // pretty much safe? Also considering the fact that we have RZR in the
+  // withdrawal queue and that the borrowed USDC will be used to buy ETH which is then
+  // added to the liquidity pool for RZR/ETH thereby supporting the price of RZR.
+  //
+  // 3. For the amount of USDC that we can borrow, what LTV should we do it so that we never face
+  // liquidation even if all the RZR in the withdrawal queue is sold.
+  //
 };
 
 estimateMaxBorrowableAndExposure();
