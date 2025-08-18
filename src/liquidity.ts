@@ -62,14 +62,15 @@ export class LiquidityPool {
     this.k = this.ethInLiquidityPool * this.rzrInLiquidityPool;
   }
 
-  toString(ethPrice: number): string {
-    const price = (
-      (this.ethInLiquidityPool / this.rzrInLiquidityPool) *
-      ethPrice
-    ).toFixed(2);
+  log(msg: string, ethPrice: number) {
+    const price = Number(
+      ((this.ethInLiquidityPool / this.rzrInLiquidityPool) * ethPrice).toFixed(
+        2
+      )
+    );
 
-    const eth = this.ethInLiquidityPool.toFixed(2);
-    const rzr = this.rzrInLiquidityPool.toFixed(2);
-    return `LiquidityPool (ethReserve=${eth}, rzrReserve=${rzr}, price=${price})`;
+    const eth = Number(this.ethInLiquidityPool.toFixed(2));
+    const rzr = Number(this.rzrInLiquidityPool.toFixed(2));
+    console.log(msg, "ethReserve", eth, "rzrReserve", rzr, "price", price);
   }
 }

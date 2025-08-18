@@ -95,51 +95,67 @@ const positions: IPosition[] = [
   {
     collateralRzr: 12000,
     debtUsdc: 50000,
-    healthScore: 2.5,
-    ltv: 0.3195,
     lltv: 0.8,
     ethExposure: 11.834401863557658981, // how much ETH we got by selling the debt USDC
     ethPrice: 4224.97060489, // the price at which we got the ETH
   },
 ];
 
+const getLiquidationPrice = (position: IPosition): IPositionWithLiquidation => {
+  // TODO: Calculate the liquidation price of the RZR and ETH on this position guessing
+  // the price of RZR and ETH.
+
+  // If ETH price goes down, then our ETH exposure loses value.
+  // Greater chance of liquidation since we are long ETH.
+
+  // If ETH price goes up, our ETH exposure increases in value.
+  // Less chance of liquidation. Safer position.
+
+  // If RZR price goes down, then our collateral RZR will be worth less.
+  // Greater chance of liquidation.
+
+  // If RZR price goes up, then our collateral RZR will be worth more.
+  // Less chance of liquidation.
+
+  // If we have a position with a lot of debt USDC, then we are more vulnerable to a price drop.
+
+  const rzrPriceInUsd = liquidityPool.getRzrPriceInUsd(position.ethPrice);
+  const ltv = position.debtUsdc / (position.collateralRzr * rzrPriceInUsd);
+  const healthScore = 1 / (ltv / liquidationThreshold);
+
+  const rzrLiquidationPrice =
+    position.debtUsdc / (position.collateralRzr * liquidationThreshold);
+
+  return {
+    healthScore,
+    ltv,
+    ...position,
+    rzrLiquidationPrice,
+  };
+};
+
 // Calculate the liquidation prices for the positions.
-const positionsWithLiquidation: IPositionWithLiquidation[] = positions.map(
-  (position) => {
-    // TODO: Calculate the liquidation price of the RZR and ETH on this position guessing
-    // the price of RZR and ETH.
+const positionsWithLiquidation = positions.map(getLiquidationPrice);
 
-    // If ETH price goes down, then our ETH exposure loses value.
-    // Greater chance of liquidation since we are long ETH.
-
-    // If ETH price goes up, our ETH exposure increases in value.
-    // Less chance of liquidation. Safer position.
-
-    // If RZR price goes down, then our collateral RZR will be worth less.
-    // Greater chance of liquidation.
-
-    // If RZR price goes up, then our collateral RZR will be worth more.
-    // Less chance of liquidation.
-
-    // If we have a position with a lot of debt USDC, then we are more vulnerable to a price drop.
-
-    const rzrLiquidationPrice =
-      position.debtUsdc / (position.collateralRzr * liquidationThreshold);
-
-    return {
-      ...position,
-      rzrLiquidationPrice,
-    };
-  }
-);
-
+// [
+//   {
+//     healthScore: 2.0037555279748855,
+//     ltv: 0.29943772662047036,
+//     collateralRzr: 12000,
+//     debtUsdc: 50000,
+//     lltv: 0.8,
+//     ethExposure: 11.834401863557659,
+//     ethPrice: 4224.97060489,
+//     rzrLiquidationPrice: 6.944444444444445
+//   }
+// ]
 console.log(positionsWithLiquidation);
 
 // Estimate the maximum amount of USDC that we can borrow
 // and use that for our exposure to ETH.
 const estimateMaxBorrowableAndExposure = () => {
   // (ethReserve=182.00, rzrReserve=55260.25, price=13.83)
-  console.log("LP Reserves before:", liquidityPool.toString(ethPrice));
+  liquidityPool.log("LP Reserves before:", ethPrice);
 
   // TODO - What we need to calculate:
   // 1. What is the maximum amount of USDC that we can borrow so that we are
@@ -158,12 +174,18 @@ const estimateMaxBorrowableAndExposure = () => {
   console.log("RZR minted for liquidity: ", newRzrMinted); // 722.9231959809
 
   // (ethReserve=184.38, rzrReserve=55983.17, price=13.83)
-  console.log("LP Reserves after:", liquidityPool.toString(ethPrice));
+  liquidityPool.log("LP Reserves after:", ethPrice);
 
-  // 2. If our position does gets liquidated, how much price impact will it have on the
+  // 2. If users do try to sell RZR, how much price impact will it have on the
   // RZR and ETH price? Ideally we want to make sure that we only liquidate if
   // the price impact is minimal.
+  const rzrSold = 5000;
+  console.log("RZR sold: ", rzrSold);
 
+  liquidityPool.swapRzrForEth(rzrSold);
+  liquidityPool.log("LP Reserves after selling RZR:", ethPrice);
+
+  // Assume that 1000 ETH is sold.
   //
   // 3. For the amount of USDC that we can borrow, what LTV should we do it so that we never face
   // liquidation even if all the RZR in the withdrawal queue is sold.
