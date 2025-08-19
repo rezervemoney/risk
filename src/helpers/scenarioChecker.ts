@@ -31,10 +31,18 @@ export function minHealthUnderScenario(
   // 2) Add new borrow + liquidity add at current spot (price-neutral, deepens liquidity)
   const allPositions: IPosition[] = [...positions];
   if (borrowUsdc > 0) {
+    // get the price of RZR in USD with the current ETH spot price. This is the case because
+    // RZR liquidity is paired with ETH.
     const rzrUsdSpot = pool.getRzrPriceInUsd(ethSpot);
+
+    // Based on the LTV we decide to use (this really does not matter as  we can mint infinite RZR), we
+    // decide how much RZR is needed as collateral to borrow the target USDC
     const rzrAddedAsCollateral = borrowUsdc / (ltvForNew * rzrUsdSpot);
+
+    // With RZR in and the USDC borrowed, we sell the USDC for ETH and add into liquidity. When we
+    // add into liquidity we again mint fresh new RZR instead of buying off from the market.
     const newEthExposure = borrowUsdc / ethSpot;
-    const newRzrMintedForLP = borrowUsdc / rzrUsdSpot; // pair 1:1 in USD terms
+    const newRzrMintedForLP = borrowUsdc / rzrUsdSpot; // mint and pair 1:1 in USD terms
     pool.addLiquidity(newEthExposure, newRzrMintedForLP);
 
     allPositions.push({

@@ -79,8 +79,20 @@ const defaultScenarios: StressScenario[] = [
     warningOnly: true,
   },
   {
-    name: "ETH -30% + Max pressure",
+    name: "ETH -30% + Max estimated pressure",
     rzrSold: estimatedMaximumSellPressure,
+    ethPriceMultiplier: 0.7,
+    warningOnly: true,
+  },
+  {
+    name: "ETH -30% + 1/3rd of the supply sells",
+    rzrSold: rzrSupply / 3,
+    ethPriceMultiplier: 0.7,
+    warningOnly: true,
+  },
+  {
+    name: "ETH -30% + half of the supply sells",
+    rzrSold: rzrSupply / 2,
     ethPriceMultiplier: 0.7,
     warningOnly: true,
   },

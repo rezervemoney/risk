@@ -16,6 +16,16 @@ This repo contains a small, self‑contained simulator that stress‑tests borro
   - Yellow: scenario is marked as a warning (informational; not used to gate the solution)
   - Default: safe scenario
 
+### Key Observations
+
+Based on the tests & simulations written above we have found a few key observations that drive the success of our model.
+
+- Massive amounts of sell pressure on RZR doesn't really cause too many liquidations. Even if 1/3rd of RZR supply is sold into the market, RZR price would drop significantly but it would not cause a liquidation in the market. In the simulations we could see that even with a 30% price drop in ETH and with 1/3rd of the RZR supply sold into the market, the loans were still healthy.
+
+- Since RZR liquidity is majorly paired with ETH, ETH price movements plays a major role in the liquidations for RZR. The protocol goes underwater if ETH price crashes drastically and the loans become unhealthy. In the simulations we could see that even if there was no sell pressure on RZR, if ETH price crashed by 80% then RZR itself would be valued less causing a liquidation.
+
+- (While this is not simulated) If the protocol gets margin called in a bear market; ie lenders decide that they want to get their loans back, then protocol will have to unwind it's position at a major loss.
+
 ### Key concepts
 
 - Health score: `(LLTV / actual LTV)`. Health ≥ 1 means the position is above liquidation.
