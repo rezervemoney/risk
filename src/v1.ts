@@ -1,4 +1,7 @@
-import { minHealthUnderScenario } from "./helpers/scenarioChecker";
+import {
+  minHealthUnderScenario,
+  StressScenario,
+} from "./helpers/scenarioChecker";
 import { IPosition } from "./interfaces";
 import { LiquidityPool } from "./liquidity";
 
@@ -39,16 +42,6 @@ const basePositions: IPosition[] = [
   //   ethPrice: 4224.97060489, // entry price of ETH exposure (not used for liquidation)
   // },
 ];
-
-/*************************************************
- * Scenario engine
- *************************************************/
-export type StressScenario = {
-  name: string;
-  rzrSold: number; // amount of RZR market-sold into the AMM
-  ethPriceMultiplier: number; // ETH shock relative to base spot price
-  warningOnly?: boolean; // if true, failing this scenario does not block borrowing (reported as warning)
-};
 
 // Default scenario set. You can extend/replace this at runtime.
 const defaultScenarios: StressScenario[] = [

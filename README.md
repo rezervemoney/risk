@@ -54,6 +54,30 @@ npm run build
 node dist/v1.js
 ```
 
+### Testing
+
+The project includes comprehensive unit tests for the position metrics calculations:
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+```
+
+The tests cover:
+
+- Basic LTV and health score calculations
+- Edge cases (zero collateral/debt, very small values)
+- Liquidation price calculations
+- Different ETH market price scenarios
+- Precision and rounding behavior
+- Return value structure validation
+
 ### Interpreting the output
 
 - "Max USDC you can borrow while staying above liquidation" is the integer floor of the solver result that keeps health ≥ 1 for all non‑warning scenarios.
