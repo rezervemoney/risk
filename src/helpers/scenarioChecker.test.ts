@@ -165,7 +165,7 @@ describe("minHealthUnderScenario", () => {
       expect(result.shockedEth).toBe(1400); // 2000 * 0.7
       expect(result.metrics).toHaveLength(2);
 
-      // Test pool state (unchanged since no RZR sold)
+      // Test pool state (unchanged since no RZR sold and no new borrow)
       const poolAfter = result.poolAfter.getReserves();
       expect(poolAfter.rzrReserve).toBe(1000);
       expect(poolAfter.ethReserve).toBe(100);
@@ -276,10 +276,10 @@ describe("minHealthUnderScenario", () => {
       expect(result.metrics).toHaveLength(3); // 2 base + 1 new
       expect(result.shockedEth).toBe(2000);
 
-      // Test pool state (unchanged since no RZR sold)
+      // Test pool state (liquidity added for new borrow)
       const poolAfter = result.poolAfter.getReserves();
-      expect(poolAfter.rzrReserve).toBe(1000);
-      expect(poolAfter.ethReserve).toBe(100);
+      expect(poolAfter.rzrReserve).toBe(1050); // 1000 + 50 RZR (10000/200)
+      expect(poolAfter.ethReserve).toBe(105); // 100 + 5 ETH (10000/2000)
 
       // Check the new position
       const pos = result.metrics[2];
@@ -345,14 +345,20 @@ describe("minHealthUnderScenario", () => {
 
       // Test new position metrics
       const newPosition = result.metrics[2];
-      expect(newPosition.collateralRzr).toBeCloseTo(40, 2); // $8000 / (0.4 * $200)
+      expect(newPosition.collateralRzr).toBeCloseTo(100, 2); // $8000 / (0.4 * $200)
       expect(newPosition.debtUsdc).toBe(8000);
       expect(newPosition.lltv).toBe(0.6);
       expect(newPosition.ethExposure).toBe(4); // $8000 / $2000
       expect(newPosition.ethPrice).toBe(2000);
-      expect(newPosition.ltv).toBeCloseTo(8000 / (40 * 200), 4);
-      expect(newPosition.healthScore).toBeCloseTo(0.6 / (8000 / (40 * 200)), 4);
-      expect(newPosition.rzrLiquidationPrice).toBeCloseTo(8000 / (0.6 * 40), 2);
+      expect(newPosition.ltv).toBeCloseTo(8000 / (100 * 200), 4);
+      expect(newPosition.healthScore).toBeCloseTo(
+        0.6 / (8000 / (100 * 200)),
+        4
+      );
+      expect(newPosition.rzrLiquidationPrice).toBeCloseTo(
+        8000 / (0.6 * 100),
+        2
+      );
     });
 
     it("should handle new borrow with stress scenario", () => {
@@ -377,10 +383,10 @@ describe("minHealthUnderScenario", () => {
       expect(result.metrics).toHaveLength(3);
       expect(result.shockedEth).toBe(1800); // 2000 * 0.9
 
-      // Test pool state after RZR sell
+      // Test pool state after RZR sell and liquidity add
       const poolAfter = result.poolAfter.getReserves();
-      expect(poolAfter.rzrReserve).toBe(1020); // 1000 + 20 RZR sold
-      expect(poolAfter.ethReserve).toBe(100); // ETH reserve unchanged (bug in swapRzrForEth)
+      expect(poolAfter.rzrReserve).toBe(1080); // 1000 + 60 RZR (12000/200) + 20 RZR sold
+      expect(poolAfter.ethReserve).toBe(106); // 100 + 6 ETH (12000/2000)
 
       // All positions should have health scores calculated
       result.metrics.forEach((metric) => {
@@ -391,21 +397,21 @@ describe("minHealthUnderScenario", () => {
 
       // Test new position with stress
       const newPosition = result.metrics[2];
-      expect(newPosition.collateralRzr).toBeCloseTo(60, 2); // $12000 / (0.4 * $200)
+      expect(newPosition.collateralRzr).toBeCloseTo(150, 2); // $12000 / (0.4 * $200)
       expect(newPosition.debtUsdc).toBe(12000);
       expect(newPosition.lltv).toBe(0.6);
       expect(newPosition.ethExposure).toBe(6); // $12000 / $2000
       expect(newPosition.ethPrice).toBe(2000);
 
       // Calculate expected metrics with stress
-      const rzrPriceAfterSell = (100 / 1020) * 1800; // New RZR price after 20 RZR sell and ETH shock
-      expect(newPosition.ltv).toBeCloseTo(12000 / (60 * rzrPriceAfterSell), 4);
+      const rzrPriceAfterSell = (106 / 1080) * 1800; // New RZR price after liquidity add and 20 RZR sell and ETH shock
+      expect(newPosition.ltv).toBeCloseTo(12000 / (150 * rzrPriceAfterSell), 4);
       expect(newPosition.healthScore).toBeCloseTo(
-        0.6 / (12000 / (60 * rzrPriceAfterSell)),
+        0.6 / (12000 / (150 * rzrPriceAfterSell)),
         4
       );
       expect(newPosition.rzrLiquidationPrice).toBeCloseTo(
-        12000 / (0.6 * 60),
+        12000 / (0.6 * 150),
         2
       );
     });
@@ -502,10 +508,10 @@ describe("minHealthUnderScenario", () => {
       expect(result.shockedEth).toBe(2000);
       expect(result.metrics).toHaveLength(1);
 
-      // Test pool state (unchanged since no RZR sold)
+      // Test pool state (liquidity added for new borrow)
       const poolAfter = result.poolAfter.getReserves();
-      expect(poolAfter.rzrReserve).toBe(1000);
-      expect(poolAfter.ethReserve).toBe(100);
+      expect(poolAfter.rzrReserve).toBe(1025); // 1000 + 25 RZR (5000/200)
+      expect(poolAfter.ethReserve).toBe(102.5); // 100 + 2.5 ETH (5000/2000)
 
       // Test new position metrics
       const newPosition = result.metrics[0];
@@ -586,7 +592,7 @@ describe("minHealthUnderScenario", () => {
         ethPriceMultiplier: 0.5, // 50% ETH drop
       };
 
-      const result = minHealthUnderScenario(
+      const r = minHealthUnderScenario(
         0,
         scenario,
         basePositions,
@@ -596,15 +602,39 @@ describe("minHealthUnderScenario", () => {
         pool
       );
 
-      expect(result.shockedEth).toBe(1000); // 2000 * 0.5
-      expect(result.metrics).toHaveLength(2);
+      expect(r.shockedEth).toBe(1000); // 2000 * 0.5
+      expect(r.metrics).toHaveLength(2);
       // Health scores should be very low due to 50% ETH drop
       const rzrPriceAt1000 = 0.1 * 1000; // $100 per RZR
       const expectedHealth1 = 0.8 / (15000 / (100 * rzrPriceAt1000));
       const expectedHealth2 = 0.75 / (8000 / (50 * rzrPriceAt1000));
       const expectedMinHealth = Math.min(expectedHealth1, expectedHealth2);
 
-      expect(result.minHealth).toBeCloseTo(expectedMinHealth, 4);
+      expect(r.minHealth).toBeCloseTo(expectedMinHealth, 4);
+
+      // Test all return values
+      expect(r.shockedEth).toBe(1000);
+      expect(r.metrics).toHaveLength(2);
+
+      // Test pool state (unchanged since no RZR sold)
+      const poolAfter = r.poolAfter.getReserves();
+      expect(poolAfter.rzrReserve).toBe(1000);
+      expect(poolAfter.ethReserve).toBe(100);
+
+      // Test individual position metrics with extreme ETH drop
+      expect(r.metrics[0].ltv).toBeCloseTo(15000 / (100 * rzrPriceAt1000), 4);
+      expect(r.metrics[0].healthScore).toBeCloseTo(expectedHealth1, 4);
+      expect(r.metrics[0].rzrLiquidationPrice).toBeCloseTo(
+        15000 / (0.8 * 100),
+        2
+      );
+
+      expect(r.metrics[1].ltv).toBeCloseTo(8000 / (50 * rzrPriceAt1000), 4);
+      expect(r.metrics[1].healthScore).toBeCloseTo(expectedHealth2, 4);
+      expect(r.metrics[1].rzrLiquidationPrice).toBeCloseTo(
+        8000 / (0.75 * 50),
+        2
+      );
     });
   });
 
