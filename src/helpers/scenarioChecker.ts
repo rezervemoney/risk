@@ -29,7 +29,7 @@ export function minHealthUnderScenario(
   const pool = poolAtStart.clone();
 
   // 2) Add new borrow + liquidity add at current spot (price-neutral, deepens liquidity)
-  let allPositions: IPosition[] = [...positions];
+  const allPositions: IPosition[] = [...positions];
   if (borrowUsdc > 0) {
     const rzrUsdSpot = pool.getRzrPriceInUsd(ethSpot);
     const rzrAddedAsCollateral = borrowUsdc / (ltvForNew * rzrUsdSpot);
