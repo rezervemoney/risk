@@ -4,12 +4,14 @@ import { LiquidityPool } from "../liquidity";
 import { IPosition } from "../interfaces";
 
 // Mock the minHealthUnderScenario function to control test scenarios
-const mockMinHealthUnderScenario = jest.fn();
-
 jest.mock("./scenarioChecker", () => ({
-  minHealthUnderScenario: mockMinHealthUnderScenario,
+  minHealthUnderScenario: jest.fn(),
   StressScenario: jest.requireActual("./scenarioChecker").StressScenario,
 }));
+
+const mockMinHealthUnderScenario = jest.mocked(
+  require("./scenarioChecker").minHealthUnderScenario
+);
 
 describe("isBorrowSafeAcrossScenarios", () => {
   let pool: LiquidityPool;
@@ -42,6 +44,7 @@ describe("isBorrowSafeAcrossScenarios", () => {
 
     // Reset mock before each test
     jest.clearAllMocks();
+    mockMinHealthUnderScenario.mockReset();
   });
 
   describe("basic scenarios", () => {
