@@ -71,12 +71,23 @@ npm run test:coverage
 
 The tests cover:
 
+**Position Metrics (`positionMetrics.ts`):**
+
 - Basic LTV and health score calculations
 - Edge cases (zero collateral/debt, very small values)
 - Liquidation price calculations
 - Different ETH market price scenarios
 - Precision and rounding behavior
 - Return value structure validation
+
+**Scenario Checker (`scenarioChecker.ts`):**
+
+- Basic stress scenarios without new borrows
+- Scenarios with new borrow positions
+- RZR sell and ETH price shock combinations
+- Pool liquidity management and state preservation
+- Edge cases (zero borrow, empty positions, extreme movements)
+- Minimum health score calculations across multiple positions
 
 ### Interpreting the output
 
