@@ -1,12 +1,12 @@
-import { IPosition, IPositionWithLiquidation } from "./interfaces";
+import { minHealthUnderScenario } from "./helpers/scenarioChecker";
+import { IPosition } from "./interfaces";
 import { LiquidityPool } from "./liquidity";
 
 /*************************************************
  * Parameters (same as your snippet, regrouped)
  *************************************************/
-const liquidationPenalty = 0.15; // kept for reference if you later want to model post-liquidation losses
-const loanToValue = 0.4; // base LTV for new borrows
-const liquidationThreshold = 0.6; // LLTV used for liquidation checks
+const loanToValue = 0.8; // base LTV for new borrows
+const liquidationThreshold = 0.9; // LLTV used for liquidation checks
 const availableUsdcSupply = 2000000;
 
 // Collateral state
@@ -26,28 +26,6 @@ const estimatedMaximumSellPressure =
 const ethInLiquidityPool = 182;
 const baseEthPrice = 4200; // current spot
 const lp0 = new LiquidityPool(rzrInLiquidityPool, ethInLiquidityPool);
-
-/*************************************************
- * Helpers
- *************************************************/
-const currentRzrPriceInUsd = (pool: LiquidityPool, ethPrice: number) =>
-  pool.getRzrPriceInUsd(ethPrice);
-
-// NOTE: Liquidation is purely a function of collateral value vs. debt.
-// ETH exposure is NOT counted as collateral here (kept separate for treasury PnL).
-const computePositionMetrics = (
-  pool: LiquidityPool,
-  ethMktPrice: number,
-  p: IPosition
-): IPositionWithLiquidation => {
-  const rzrUsd = currentRzrPriceInUsd(pool, ethMktPrice);
-  const collateralUsd = p.collateralRzr * rzrUsd;
-  const ltv = p.debtUsdc / collateralUsd;
-  const healthScore = (p.lltv ?? liquidationThreshold) / ltv; // >= 1 is safe
-  const rzrLiquidationPrice =
-    p.debtUsdc / ((p.lltv ?? liquidationThreshold) * p.collateralRzr);
-  return { ...p, ltv, healthScore, rzrLiquidationPrice };
-};
 
 /*************************************************
  * Existing positions (unchanged semantics)
@@ -119,59 +97,6 @@ const defaultScenarios: StressScenario[] = [
   { name: "ETH +15%", rzrSold: 0, ethPriceMultiplier: 1.15 },
 ];
 
-/*************************************************
- * Core simulation primitives
- *************************************************/
-
-// Add a *new* borrow position of size B, deepen the pool with paired liquidity
-// (does not move price), then apply a stress scenario (RZR sells and ETH shock),
-// and return the min health across all positions (existing + new).
-function minHealthUnderScenario(
-  borrowUsdc: number,
-  scenario: StressScenario,
-  positions: IPosition[] = basePositions,
-  ethSpot: number = baseEthPrice,
-  ltvForNew: number = loanToValue,
-  lltvForNew: number = liquidationThreshold,
-  poolAtStart: LiquidityPool = lp0
-) {
-  // 1) Start from the live pool state
-  const pool = poolAtStart.clone();
-
-  // 2) Add new borrow + liquidity add at current spot (price-neutral, deepens liquidity)
-  let allPositions: IPosition[] = [...positions];
-  if (borrowUsdc > 0) {
-    const rzrUsdSpot = currentRzrPriceInUsd(pool, ethSpot);
-    const rzrAddedAsCollateral = borrowUsdc / (ltvForNew * rzrUsdSpot);
-    const newEthExposure = borrowUsdc / ethSpot;
-    const newRzrMintedForLP = borrowUsdc / rzrUsdSpot; // pair 1:1 in USD terms
-    pool.addLiquidity(newEthExposure, newRzrMintedForLP);
-
-    allPositions.push({
-      collateralRzr: rzrAddedAsCollateral,
-      debtUsdc: borrowUsdc,
-      lltv: lltvForNew,
-      ethExposure: newEthExposure,
-      ethPrice: ethSpot, // tracking only
-    });
-  }
-
-  // 3) Apply stress: market sells into RZR/ETH AMM, then ETH USD shock
-  if (scenario.rzrSold > 0) pool.swapRzrForEth(scenario.rzrSold);
-  const shockedEth = ethSpot * scenario.ethPriceMultiplier;
-
-  // 4) Compute health of all positions at shocked state
-  const metrics = allPositions.map((p) =>
-    computePositionMetrics(pool, shockedEth, p)
-  );
-  const minHealth = metrics.reduce(
-    (m, p) => Math.min(m, p.healthScore),
-    +Infinity
-  );
-
-  return { minHealth, metrics, poolAfter: pool, shockedEth };
-}
-
 // Feasibility check: safe if health >= 1 in *every* non-warning scenario
 function isBorrowSafeAcrossScenarios(
   borrowUsdc: number,
@@ -192,10 +117,7 @@ function isBorrowSafeAcrossScenarios(
       liquidationThreshold,
       poolAtStart
     );
-    if (!(minHealth >= 1)) {
-      console.log(`minHealth: ${minHealth}, scenario: ${s.name}`);
-      return false;
-    }
+    if (!(minHealth >= 1)) return false;
   }
   return true;
 }
@@ -219,7 +141,7 @@ export function solveMaxBorrow(
   const positions = options?.positions ?? basePositions;
   const ethSpot = options?.ethSpot ?? baseEthPrice;
   const poolAtStart = options?.poolAtStart ?? lp0;
-  const ltvRange = options?.ltvRange ?? { min: 0.1, max: 0.8 }; // Default LTV range
+  const ltvRange = options?.ltvRange ?? { min: 0.3, max: 0.8 }; // Default LTV range
 
   let bestAmount = 0;
   let bestLtv = ltvRange.min;
@@ -297,7 +219,7 @@ export function solveMaxBorrow(
 function run() {
   // Log base spot and price
   console.log("Base ETH spot:", baseEthPrice);
-  console.log("Base RZR spot (USD):", currentRzrPriceInUsd(lp0, baseEthPrice));
+  console.log("Base RZR spot (USD):", lp0.getRzrPriceInUsd(baseEthPrice));
 
   const { maxSafeBorrowUsdc, optimalLtv, diagnostics } = solveMaxBorrow();
   console.log(
@@ -333,15 +255,4 @@ function run() {
   }
 }
 
-/*************************************************
- * Notes / Extensions:
- * 1) If you want ETH exposure to *count* toward collateral, change computePositionMetrics()
- *    to include + p.ethExposure * ethMktPrice in collateralUsd (but that materially
- *    changes liquidation semantics vs. typical onchain lending).
- * 2) You can add path-dependent stress (multi-step sells + ETH drift) by applying
- *    swapRzrForEth() in increments and iterating ethPriceMultiplier over time.
- * 3) liquidationPenalty is kept for treasury loss modeling after a breach; it’s
- *    not used in the pre-breach feasibility check.
- * 4) To model slippage fees, embed them in LiquidityPool.swapRzrForEth().
- *************************************************/
 run();
