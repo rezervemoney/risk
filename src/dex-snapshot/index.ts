@@ -46,4 +46,4 @@ const main = async () => {
   await dexSnapshot.printSnapshotReserves();
 };
 
-main();
+// main();
