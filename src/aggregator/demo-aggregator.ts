@@ -198,8 +198,5 @@ async function demonstrateAggregator() {
 }
 
 // Run the demonstration
-if (require.main === module) {
-  demonstrateAggregator().catch(console.error);
-}
-
+if (require.main === module) demonstrateAggregator().catch(console.error);
 export { demonstrateAggregator };

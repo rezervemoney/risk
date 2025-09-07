@@ -111,4 +111,10 @@ export const POOL_CONFIGS: PoolConfig[] = [
     chain: Chain.ETHEREUM,
     marketAddress: "0xc2FcdD48209DD383B1f2AC120b84b2A75EE18BD3",
   },
+  {
+    name: "RZR/WETH",
+    source: Source.UNISWAPV2,
+    chain: Chain.ETHEREUM,
+    marketAddress: "0xaa38D5755d313f03390Dce8b570fB01Cc591DfFd",
+  },
 ];

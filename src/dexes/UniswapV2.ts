@@ -2,15 +2,17 @@ import { IDex } from "./base";
 
 export class UniswapV2 implements IDex {
   public k: number;
+  public name: string;
 
   constructor(
-    public name: string,
+    public source: string,
     public token0Reserve: number,
     public token1Reserve: number,
     public token0: string,
     public token1: string
   ) {
     this.k = this.token0Reserve * this.token1Reserve;
+    this.name = `${source}:${this.token0}/${this.token1}`;
   }
 
   getReserves() {

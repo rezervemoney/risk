@@ -12,9 +12,7 @@ export class SimplePriceOracle implements PriceOracle {
 
   getPrice(token: string): number {
     const price = this.prices.get(token);
-    if (price === undefined) {
-      throw new Error(`Price not found for token: ${token}`);
-    }
+    if (!price) throw new Error(`Price not found for token: ${token}`);
     return price;
   }
 
