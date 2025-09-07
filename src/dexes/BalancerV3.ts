@@ -1,6 +1,6 @@
 import { IDex } from "./base";
 
-export class UniswapV2 implements IDex {
+export class BalancerV3 implements IDex {
   public k: number;
 
   constructor(
@@ -8,7 +8,9 @@ export class UniswapV2 implements IDex {
     public token0Reserve: number,
     public token1Reserve: number,
     public token0: string,
-    public token1: string
+    public token1: string,
+    public token0Weight: number,
+    public token1Weight: number
   ) {
     this.k = this.token0Reserve * this.token1Reserve;
   }

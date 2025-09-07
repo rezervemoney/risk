@@ -9,6 +9,7 @@ describe("UniswapV2", () => {
 
   beforeEach(() => {
     uniswapV2 = new UniswapV2(
+      "UniswapV2",
       initialToken0Reserve,
       initialToken1Reserve,
       token0,
@@ -172,7 +173,13 @@ describe("UniswapV2", () => {
 
   describe("edge cases", () => {
     it("should handle equal reserves", () => {
-      const equalReserveUniswap = new UniswapV2(1000, 1000, token0, token1);
+      const equalReserveUniswap = new UniswapV2(
+        "UniswapV2",
+        1000,
+        1000,
+        token0,
+        token1
+      );
       const result = equalReserveUniswap.swap(token0, 100, token1);
 
       expect(result.toTokenReceived).toBeGreaterThan(0);

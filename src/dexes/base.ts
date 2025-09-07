@@ -1,4 +1,6 @@
 export interface IDex {
+  name: string;
+
   swap(
     fromToken: string,
     fromTokenAmount: number,
