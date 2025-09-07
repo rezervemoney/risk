@@ -43,7 +43,6 @@ describe("balancerv3.ts", () => {
                 {
                   name: "USD Coin",
                   balance: "1000000",
-                  balanceUSD: "1000000",
                   address: "0xa0b86a33e6c0b8b8b8b8b8b8b8b8b8b8b8b8b8b8",
                   symbol: "USDC",
                   weight: "0.8",
@@ -51,7 +50,6 @@ describe("balancerv3.ts", () => {
                 {
                   name: "Wrapped Ether",
                   balance: "400",
-                  balanceUSD: "800000",
                   address: "0xb1c97e44e6c0b8b8b8b8b8b8b8b8b8b8b8b8b8b8",
                   symbol: "WETH",
                   weight: "0.2",
@@ -65,7 +63,6 @@ describe("balancerv3.ts", () => {
                 {
                   name: "Dai Stablecoin",
                   balance: "500000",
-                  balanceUSD: "500000",
                   address: "0xf5f97e44e6c0b8b8b8b8b8b8b8b8b8b8b8b8b8b8",
                   symbol: "DAI",
                   weight: "0.5",
@@ -73,7 +70,6 @@ describe("balancerv3.ts", () => {
                 {
                   name: "USD Coin",
                   balance: "500000",
-                  balanceUSD: "500000",
                   address: "0xa0b86a33e6c0b8b8b8b8b8b8b8b8b8b8b8b8b8b8",
                   symbol: "USDC",
                   weight: "0.5",
@@ -115,8 +111,8 @@ describe("balancerv3.ts", () => {
       expect(pool1.token1).toBe("WETH");
       expect(pool1.token0Weight).toBe(0.8);
       expect(pool1.token1Weight).toBe(0.2);
-      expect(pool1.token0Reserve).toBe(1000000); // balanceUSD
-      expect(pool1.token1Reserve).toBe(800000); // balanceUSD
+      expect(pool1.token0Reserve).toBe(1000000); // balance
+      expect(pool1.token1Reserve).toBe(400); // balance
       expect(pool1.swapFee).toBe(0.01);
 
       // Verify second pool
@@ -126,8 +122,8 @@ describe("balancerv3.ts", () => {
       expect(pool2.token1).toBe("USDC");
       expect(pool2.token0Weight).toBe(0.5);
       expect(pool2.token1Weight).toBe(0.5);
-      expect(pool2.token0Reserve).toBe(500000); // balanceUSD
-      expect(pool2.token1Reserve).toBe(500000); // balanceUSD
+      expect(pool2.token0Reserve).toBe(500000); // balance
+      expect(pool2.token1Reserve).toBe(500000); // balance
       expect(pool2.swapFee).toBe(0.01);
     });
 
@@ -204,7 +200,6 @@ describe("balancerv3.ts", () => {
                 {
                   name: "Token 1",
                   balance: "1000000",
-                  balanceUSD: "1000000",
                   address: "0xa0b86a33e6c0b8b8b8b8b8b8b8b8b8b8b8b8b8b8",
                   symbol: "TOKEN1",
                   weight: "80", // Integer weight
@@ -212,7 +207,6 @@ describe("balancerv3.ts", () => {
                 {
                   name: "Token 2",
                   balance: "500000",
-                  balanceUSD: "500000",
                   address: "0xb1c97e44e6c0b8b8b8b8b8b8b8b8b8b8b8b8b8b8",
                   symbol: "TOKEN2",
                   weight: "20", // Integer weight
@@ -231,8 +225,8 @@ describe("balancerv3.ts", () => {
       const pool = result[0] as BalancerV3;
       expect(pool.token0Weight).toBe(80);
       expect(pool.token1Weight).toBe(20);
-      expect(pool.token0Reserve).toBe(1000000); // balanceUSD
-      expect(pool.token1Reserve).toBe(500000); // balanceUSD
+      expect(pool.token0Reserve).toBe(1000000); // balance
+      expect(pool.token1Reserve).toBe(500000); // balance
     });
 
     it("should construct correct GraphQL query", async () => {
@@ -258,7 +252,7 @@ describe("balancerv3.ts", () => {
       expect(query).toContain("poolTokens");
       expect(query).toContain("name");
       expect(query).toContain("address");
-      expect(query).toContain("balanceUSD");
+      expect(query).toContain("balance");
       expect(query).toContain("symbol");
       expect(query).toContain("weight");
     });
@@ -274,7 +268,6 @@ describe("balancerv3.ts", () => {
                 {
                   name: "Token 1",
                   balance: "400000",
-                  balanceUSD: "400000",
                   address: "0xa0b86a33e6c0b8b8b8b8b8b8b8b8b8b8b8b8b8b8",
                   symbol: "TOKEN1",
                   weight: "0.4",
@@ -282,7 +275,6 @@ describe("balancerv3.ts", () => {
                 {
                   name: "Token 2",
                   balance: "300000",
-                  balanceUSD: "300000",
                   address: "0xb1c97e44e6c0b8b8b8b8b8b8b8b8b8b8b8b8b8b8",
                   symbol: "TOKEN2",
                   weight: "0.3",
@@ -290,7 +282,6 @@ describe("balancerv3.ts", () => {
                 {
                   name: "Token 3",
                   balance: "300000",
-                  balanceUSD: "300000",
                   address: "0xc2d97e44e6c0b8b8b8b8b8b8b8b8b8b8b8b8b8b8",
                   symbol: "TOKEN3",
                   weight: "0.3",
@@ -311,8 +302,8 @@ describe("balancerv3.ts", () => {
       expect(pool.token1).toBe("TOKEN2");
       expect(pool.token0Weight).toBe(0.4);
       expect(pool.token1Weight).toBe(0.3);
-      expect(pool.token0Reserve).toBe(400000); // balanceUSD
-      expect(pool.token1Reserve).toBe(300000); // balanceUSD
+      expect(pool.token0Reserve).toBe(400000); // balance
+      expect(pool.token1Reserve).toBe(300000); // balance
       // Third token should be ignored
     });
 
@@ -327,7 +318,6 @@ describe("balancerv3.ts", () => {
                 {
                   name: "Token 1",
                   balance: "1000000",
-                  balanceUSD: "1000000",
                   address: "0xa0b86a33e6c0b8b8b8b8b8b8b8b8b8b8b8b8b8b8",
                   symbol: "TOKEN1",
                   weight: "1.0",
@@ -374,7 +364,6 @@ describe("balancerv3.ts", () => {
                 {
                   name: "Token 1",
                   balance: "1000000",
-                  balanceUSD: "1000000",
                   address: "0xa0b86a33e6c0b8b8b8b8b8b8b8b8b8b8b8b8b8b8",
                   symbol: "TOKEN1",
                   weight: "invalid", // Invalid weight
@@ -382,7 +371,6 @@ describe("balancerv3.ts", () => {
                 {
                   name: "Token 2",
                   balance: "500000",
-                  balanceUSD: "500000",
                   address: "0xb1c97e44e6c0b8b8b8b8b8b8b8b8b8b8b8b8b8b8",
                   symbol: "TOKEN2",
                   weight: "0.5",
@@ -401,8 +389,8 @@ describe("balancerv3.ts", () => {
       const pool = result[0] as BalancerV3;
       expect(pool.token0Weight).toBeNaN(); // Number("invalid") returns NaN
       expect(pool.token1Weight).toBe(0.5);
-      expect(pool.token0Reserve).toBe(1000000); // balanceUSD
-      expect(pool.token1Reserve).toBe(500000); // balanceUSD
+      expect(pool.token0Reserve).toBe(1000000); // balance
+      expect(pool.token1Reserve).toBe(500000); // balance
     });
   });
 
@@ -418,7 +406,6 @@ describe("balancerv3.ts", () => {
                 {
                   name: "USD Coin",
                   balance: "1000000",
-                  balanceUSD: "1000000",
                   address: "0xa0b86a33e6c0b8b8b8b8b8b8b8b8b8b8b8b8b8b8",
                   symbol: "USDC",
                   weight: "0.8",
@@ -426,7 +413,6 @@ describe("balancerv3.ts", () => {
                 {
                   name: "Wrapped Ether",
                   balance: "400",
-                  balanceUSD: "800000",
                   address: "0xb1c97e44e6c0b8b8b8b8b8b8b8b8b8b8b8b8b8b8",
                   symbol: "WETH",
                   weight: "0.2",
@@ -444,8 +430,8 @@ describe("balancerv3.ts", () => {
 
       // Test that the created pool is functional
       expect(pool.getReserves()).toEqual({
-        token0: 1000000, // balanceUSD
-        token1: 800000, // balanceUSD
+        token0: 1000000, // balance
+        token1: 400, // balance
       });
 
       expect(pool.price("USDC")).toBeGreaterThan(0);
@@ -460,7 +446,7 @@ describe("balancerv3.ts", () => {
       // Verify reserves were updated
       const newReserves = pool.getReserves();
       expect(newReserves.token0).toBe(1000100); // 1000000 + 100
-      expect(newReserves.token1).toBeLessThan(800000); // 800000 - amount received
+      expect(newReserves.token1).toBeLessThan(400); // 400 - amount received
     });
   });
 });
