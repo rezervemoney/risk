@@ -46,12 +46,6 @@ export const POOL_CONFIGS: PoolConfig[] = [
     marketAddress: "0x36e6765907dd61b50ad33f79574dd1b63339b59c",
   },
   {
-    name: "RZR/lstRZR",
-    source: Source.BEETS,
-    chain: Chain.SONIC,
-    marketAddress: "0xdd30ded4a23bc03268dcac62538f45b55633d94a",
-  },
-  {
     name: "lstRZR/stS",
     source: Source.BEETS,
     chain: Chain.SONIC,
@@ -94,12 +88,6 @@ export const POOL_CONFIGS: PoolConfig[] = [
     marketAddress: "0x3c2d67e73150dcc80f8fd17227c50989ac9fb570",
   },
   {
-    name: "RZR/lstRZR",
-    source: Source.BALANCERV3,
-    chain: Chain.ETHEREUM,
-    marketAddress: "0xecd03277a21e41bd61c9226eba24930a6a54b30c",
-  },
-  {
     name: "RZR/weETH",
     source: Source.BALANCERV3,
     chain: Chain.ETHEREUM,
@@ -116,12 +104,6 @@ export const POOL_CONFIGS: PoolConfig[] = [
     source: Source.BALANCERV3,
     chain: Chain.ETHEREUM,
     marketAddress: "0x8115054a485d7775e13a8a420dd986ff595824fa",
-  },
-  {
-    name: "RZR/lstRZR",
-    source: Source.BALANCERV3,
-    chain: Chain.ETHEREUM,
-    marketAddress: "0xecd03277a21e41bd61c9226eba24930a6a54b30c",
   },
   {
     name: "RZR/frxETH/crvUSD",

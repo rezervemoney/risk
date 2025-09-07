@@ -19,6 +19,7 @@ interface PoolDataResponse {
 }
 
 export async function getBalancerTemplateSnapshot(
+  name: string,
   url: string,
   ids: string[],
   chain: "MAINNET" | "SONIC"
@@ -46,7 +47,7 @@ export async function getBalancerTemplateSnapshot(
 
   return resp.data.data.poolGetPools.map((p) => {
     return new BalancerV3(
-      p.name, // public name: string,
+      name, // public name: string,
       Number(p.poolTokens[0].balance), // public token0Reserve: number,
       Number(p.poolTokens[1].balance), // public token1Reserve: number,
       p.poolTokens[0].symbol, // public token0: string,

@@ -1,7 +1,6 @@
 import axios from "axios";
 import { getBalancerV3DexSnapshots } from "./balancerv3";
 import { BalancerV3 } from "../dexes/BalancerV3";
-import { POOL_CONFIGS, Source } from "./pools";
 
 // Mock axios
 jest.mock("axios");
@@ -106,7 +105,7 @@ describe("balancerv3.ts", () => {
 
       // Verify first pool
       const pool1 = result[0] as BalancerV3;
-      expect(pool1.name).toBe("USDC-WETH Pool:USDC/WETH-80:20"); // Auto-generated name format
+      expect(pool1.name).toBe("BalancerV3:USDC/WETH-80:20"); // Auto-generated name format
       expect(pool1.token0).toBe("USDC");
       expect(pool1.token1).toBe("WETH");
       expect(pool1.token0Weight).toBe(0.8);
@@ -117,7 +116,7 @@ describe("balancerv3.ts", () => {
 
       // Verify second pool
       const pool2 = result[1] as BalancerV3;
-      expect(pool2.name).toBe("DAI-USDC Pool:DAI/USDC-50:50"); // Auto-generated name format
+      expect(pool2.name).toBe("BalancerV3:DAI/USDC-50:50"); // Auto-generated name format
       expect(pool2.token0).toBe("DAI");
       expect(pool2.token1).toBe("USDC");
       expect(pool2.token0Weight).toBe(0.5);
