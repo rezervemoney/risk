@@ -3,6 +3,8 @@ import { ethers } from "ethers";
 export const SONIC_RPC_URL = "https://rpc.soniclabs.com";
 export const ETH_RPC_URL = "https://0xrpc.io/eth";
 
+export type Chain = "sonic" | "ethereum";
+
 /**
  * Get a provider for the Sonic network
  * @returns ethers.JsonRpcProvider
@@ -28,7 +30,7 @@ export function getEthereumProvider(): ethers.JsonRpcProvider {
 export function getContract<T = ethers.Contract>(
   contractAddress: string,
   abi: ethers.Interface | ethers.InterfaceAbi,
-  chain: "sonic" | "ethereum"
+  chain: Chain
 ): T {
   const provider =
     chain === "sonic" ? getSonicProvider() : getEthereumProvider();

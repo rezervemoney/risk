@@ -34,12 +34,6 @@ export const POOL_CONFIGS: PoolConfig[] = [
     marketAddress: "0xFF3a2650C5ffd0745FB93261671E6d3E95f2C082",
   },
   {
-    name: "RZR/lstRZR",
-    source: Source.EQUALIZER,
-    chain: Chain.SONIC,
-    marketAddress: "0xD9925FB0f88D087FfEdFCD88b032e55c82d171Df",
-  },
-  {
     name: "RZR/stS",
     source: Source.BEETS,
     chain: Chain.SONIC,
