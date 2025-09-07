@@ -1,4 +1,5 @@
 import { IDex } from "../dexes/base";
+import { PriceOracle } from "./oracle";
 
 export interface SwapPath {
   path: string[];
@@ -19,60 +20,11 @@ export interface SwapStep {
   priceImpact: number;
 }
 
-export interface PriceOracle {
-  getPrice(token: string): number;
-  getTokens(): string[];
-}
-
-export class SimplePriceOracle implements PriceOracle {
-  private prices: Map<string, number>;
-
-  constructor(prices: Record<string, number>) {
-    this.prices = new Map(Object.entries(prices));
-  }
-
-  getPrice(token: string): number {
-    const price = this.prices.get(token);
-    if (price === undefined) {
-      throw new Error(`Price not found for token: ${token}`);
-    }
-    return price;
-  }
-
-  getTokens(): string[] {
-    return Array.from(this.prices.keys());
-  }
-}
-
 export class Aggregator {
-  private priceOracle: PriceOracle;
   private maxPathLength: number = 3; // Maximum number of hops in a path
   private maxSlippageThreshold: number = 0.05; // 5% max slippage
 
-  constructor(public dexes: IDex[], priceOracle?: PriceOracle) {
-    // Default price oracle with common token prices
-    this.priceOracle =
-      priceOracle ||
-      new SimplePriceOracle({
-        RZR: 1.0,
-        USDC: 1.0,
-        USDT: 1.0,
-        DAI: 1.0,
-        WETH: 3000.0,
-        ETH: 3000.0,
-        wstETH: 3100.0,
-        rETH: 3050.0,
-        weETH: 3150.0,
-        eBTC: 95000.0,
-        ETHFI: 4.5,
-        frxETH: 3000.0,
-        crvUSD: 1.0,
-        scUSD: 1.0,
-        lstRZR: 1.1,
-        stS: 0.95,
-        scBTC: 95000.0,
-      });
-  }
+  constructor(public dexes: IDex[], public priceOracle: PriceOracle) {}
 
   /**
    * Find all possible swap paths between two tokens

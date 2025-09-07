@@ -1,4 +1,5 @@
-import { Aggregator, SimplePriceOracle } from ".";
+import { Aggregator } from "./index";
+import { SimplePriceOracle } from "./oracle";
 import { getDexSnapshots } from "../dex-snapshot";
 
 async function demonstrateAggregator() {

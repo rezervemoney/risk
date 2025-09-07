@@ -1,4 +1,5 @@
-import { Aggregator, SimplePriceOracle, SwapPath, SwapStep } from ".";
+import { Aggregator } from "./index";
+import { mockPriceOracle, SimplePriceOracle } from "./oracle";
 import { IDex } from "../dexes/base";
 import { BalancerV3 } from "../dexes/BalancerV3";
 import { UniswapV2 } from "../dexes/UniswapV2";
@@ -107,7 +108,7 @@ describe("Aggregator", () => {
 
   describe("constructor", () => {
     it("should initialize with default price oracle", () => {
-      const defaultAggregator = new Aggregator(mockDexes);
+      const defaultAggregator = new Aggregator(mockDexes, mockPriceOracle);
       expect(defaultAggregator).toBeDefined();
     });
 
