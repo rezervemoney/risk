@@ -1,11 +1,13 @@
+import assert from "assert";
 import { IDex } from "./base";
 
 export class BalancerV3 implements IDex {
   public totalWeight: number;
   public invariant: number;
+  public name: string;
 
   constructor(
-    public name: string,
+    public source: string,
     public token0Reserve: number,
     public token1Reserve: number,
     public token0: string,
@@ -17,9 +19,11 @@ export class BalancerV3 implements IDex {
     this.totalWeight = this.token0Weight + this.token1Weight;
     this.invariant = this.calculateInvariant();
 
-    this.name = `${this.token0}/${this.token1}-${this.token0Weight * 100}:${
-      this.token1Weight * 100
-    }`;
+    this.name = `${source}:${this.token0}/${this.token1}-${
+      this.token0Weight * 100
+    }:${this.token1Weight * 100}`;
+
+    assert(token0Weight + token1Weight === 1, "Token weights must sum to 1");
   }
 
   /**

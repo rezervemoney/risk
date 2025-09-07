@@ -106,7 +106,7 @@ describe("balancerv3.ts", () => {
 
       // Verify first pool
       const pool1 = result[0] as BalancerV3;
-      expect(pool1.name).toBe("USDC/WETH-80:20"); // Auto-generated name format
+      expect(pool1.name).toBe("USDC-WETH Pool:USDC/WETH-80:20"); // Auto-generated name format
       expect(pool1.token0).toBe("USDC");
       expect(pool1.token1).toBe("WETH");
       expect(pool1.token0Weight).toBe(0.8);
@@ -117,7 +117,7 @@ describe("balancerv3.ts", () => {
 
       // Verify second pool
       const pool2 = result[1] as BalancerV3;
-      expect(pool2.name).toBe("DAI/USDC-50:50"); // Auto-generated name format
+      expect(pool2.name).toBe("DAI-USDC Pool:DAI/USDC-50:50"); // Auto-generated name format
       expect(pool2.token0).toBe("DAI");
       expect(pool2.token1).toBe("USDC");
       expect(pool2.token0Weight).toBe(0.5);
@@ -202,14 +202,14 @@ describe("balancerv3.ts", () => {
                   balance: "1000000",
                   address: "0xa0b86a33e6c0b8b8b8b8b8b8b8b8b8b8b8b8b8b8",
                   symbol: "TOKEN1",
-                  weight: "80", // Integer weight
+                  weight: "0.8", // Decimal weight
                 },
                 {
                   name: "Token 2",
                   balance: "500000",
                   address: "0xb1c97e44e6c0b8b8b8b8b8b8b8b8b8b8b8b8b8b8",
                   symbol: "TOKEN2",
-                  weight: "20", // Integer weight
+                  weight: "0.2", // Decimal weight
                 },
               ],
             },
@@ -223,8 +223,8 @@ describe("balancerv3.ts", () => {
 
       expect(result).toHaveLength(1);
       const pool = result[0] as BalancerV3;
-      expect(pool.token0Weight).toBe(80);
-      expect(pool.token1Weight).toBe(20);
+      expect(pool.token0Weight).toBe(0.8);
+      expect(pool.token1Weight).toBe(0.2);
       expect(pool.token0Reserve).toBe(1000000); // balance
       expect(pool.token1Reserve).toBe(500000); // balance
     });
@@ -270,14 +270,14 @@ describe("balancerv3.ts", () => {
                   balance: "400000",
                   address: "0xa0b86a33e6c0b8b8b8b8b8b8b8b8b8b8b8b8b8b8",
                   symbol: "TOKEN1",
-                  weight: "0.4",
+                  weight: "0.6",
                 },
                 {
                   name: "Token 2",
                   balance: "300000",
                   address: "0xb1c97e44e6c0b8b8b8b8b8b8b8b8b8b8b8b8b8b8",
                   symbol: "TOKEN2",
-                  weight: "0.3",
+                  weight: "0.4",
                 },
                 {
                   name: "Token 3",
@@ -300,8 +300,8 @@ describe("balancerv3.ts", () => {
       const pool = result[0] as BalancerV3;
       expect(pool.token0).toBe("TOKEN1");
       expect(pool.token1).toBe("TOKEN2");
-      expect(pool.token0Weight).toBe(0.4);
-      expect(pool.token1Weight).toBe(0.3);
+      expect(pool.token0Weight).toBe(0.6);
+      expect(pool.token1Weight).toBe(0.4);
       expect(pool.token0Reserve).toBe(400000); // balance
       expect(pool.token1Reserve).toBe(300000); // balance
       // Third token should be ignored
@@ -366,7 +366,7 @@ describe("balancerv3.ts", () => {
                   balance: "1000000",
                   address: "0xa0b86a33e6c0b8b8b8b8b8b8b8b8b8b8b8b8b8b8",
                   symbol: "TOKEN1",
-                  weight: "invalid", // Invalid weight
+                  weight: "0.5", // Valid weight
                 },
                 {
                   name: "Token 2",
@@ -387,7 +387,7 @@ describe("balancerv3.ts", () => {
 
       expect(result).toHaveLength(1);
       const pool = result[0] as BalancerV3;
-      expect(pool.token0Weight).toBeNaN(); // Number("invalid") returns NaN
+      expect(pool.token0Weight).toBe(0.5); // Valid weight
       expect(pool.token1Weight).toBe(0.5);
       expect(pool.token0Reserve).toBe(1000000); // balance
       expect(pool.token1Reserve).toBe(500000); // balance

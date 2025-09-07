@@ -6,8 +6,8 @@ describe("BalancerV3", () => {
   const token1 = "WETH";
   const token0Reserve = 1000000; // 1M USDC
   const token1Reserve = 400; // 400 WETH
-  const token0Weight = 80; // 80% weight for USDC
-  const token1Weight = 20; // 20% weight for WETH
+  const token0Weight = 0.8; // 80% weight for USDC (will be scaled to 80)
+  const token1Weight = 0.2; // 20% weight for WETH (will be scaled to 20)
   const swapFee = 0.003; // 0.3% swap fee
 
   beforeEach(() => {
@@ -25,20 +25,20 @@ describe("BalancerV3", () => {
 
   describe("constructor", () => {
     it("should initialize with correct parameters", () => {
-      expect(balancerV3.name).toBe("USDC/WETH-8000:2000"); // Auto-generated name format
+      expect(balancerV3.name).toBe("BalancerV3:USDC/WETH-80:20"); // Auto-generated name format
       expect(balancerV3.token0Reserve).toBe(token0Reserve);
       expect(balancerV3.token1Reserve).toBe(token1Reserve);
       expect(balancerV3.token0).toBe(token0);
       expect(balancerV3.token1).toBe(token1);
-      expect(balancerV3.token0Weight).toBe(token0Weight);
-      expect(balancerV3.token1Weight).toBe(token1Weight);
+      expect(balancerV3.token0Weight).toBe(token0Weight); // Weights are stored as decimals (0.8, 0.2)
+      expect(balancerV3.token1Weight).toBe(token1Weight); // Weights are stored as decimals (0.8, 0.2)
       expect(balancerV3.swapFee).toBe(swapFee);
-      expect(balancerV3.totalWeight).toBe(token0Weight + token1Weight);
+      expect(balancerV3.totalWeight).toBe(token0Weight + token1Weight); // Total weight is 0.8 + 0.2 = 1
       expect(balancerV3.invariant).toBeGreaterThan(0);
     });
 
     it("should calculate total weight correctly", () => {
-      expect(balancerV3.getTotalWeight()).toBe(100);
+      expect(balancerV3.getTotalWeight()).toBe(1); // Total weight is 0.8 + 0.2 = 1
     });
 
     it("should calculate invariant correctly", () => {
@@ -251,8 +251,8 @@ describe("BalancerV3", () => {
         100, // 100 WETH
         "USDC",
         "WETH",
-        90, // 90% weight for USDC
-        10, // 10% weight for WETH
+        0.9, // 90% weight for USDC (will be scaled to 90)
+        0.1, // 10% weight for WETH (will be scaled to 10)
         0.003
       );
 
@@ -271,8 +271,8 @@ describe("BalancerV3", () => {
         400,
         "USDC",
         "WETH",
-        80,
-        20,
+        0.8, // 80% weight (will be scaled to 80)
+        0.2, // 20% weight (will be scaled to 20)
         0.003
       );
       const pool2 = new BalancerV3(
@@ -281,8 +281,8 @@ describe("BalancerV3", () => {
         400,
         "USDC",
         "WETH",
-        50,
-        50,
+        0.5, // 50% weight (will be scaled to 50)
+        0.5, // 50% weight (will be scaled to 50)
         0.003
       );
 
@@ -388,8 +388,8 @@ describe("BalancerV3", () => {
         400,
         "USDC",
         "WETH",
-        80,
-        20,
+        0.8, // 80% weight (will be scaled to 80)
+        0.2, // 20% weight (will be scaled to 20)
         0.01
       ); // 1% fee
       const poolWithoutFee = new BalancerV3(
@@ -398,8 +398,8 @@ describe("BalancerV3", () => {
         400,
         "USDC",
         "WETH",
-        80,
-        20,
+        0.8, // 80% weight (will be scaled to 80)
+        0.2, // 20% weight (will be scaled to 20)
         0
       ); // 0% fee
 
