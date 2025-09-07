@@ -57,7 +57,6 @@ export const POOL_CONFIGS: PoolConfig[] = [
     chain: Chain.SONIC,
     marketAddress: "0x307cc0ab64dc0496cc113357ee14c53d4db4b966",
   },
-
   {
     name: "RZR/scUSD",
     source: Source.SHADOW,
@@ -75,12 +74,6 @@ export const POOL_CONFIGS: PoolConfig[] = [
     source: Source.SHADOW,
     chain: Chain.SONIC,
     marketAddress: "0x3eab8439805b5fa0a2ddfe01d7f4ac30f9cf7907",
-  },
-  {
-    name: "RZR/lstRZR",
-    source: Source.SHADOW,
-    chain: Chain.SONIC,
-    marketAddress: "0xe70a4c4af0fcbef07bd7fb55c9a89a9f5a059572",
   },
   {
     name: "RZR/ETH",

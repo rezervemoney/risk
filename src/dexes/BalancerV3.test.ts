@@ -25,7 +25,7 @@ describe("BalancerV3", () => {
 
   describe("constructor", () => {
     it("should initialize with correct parameters", () => {
-      expect(balancerV3.name).toBe("BalancerV3");
+      expect(balancerV3.name).toBe("USDC/WETH-8000:2000"); // Auto-generated name format
       expect(balancerV3.token0Reserve).toBe(token0Reserve);
       expect(balancerV3.token1Reserve).toBe(token1Reserve);
       expect(balancerV3.token0).toBe(token0);

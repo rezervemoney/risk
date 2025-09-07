@@ -16,6 +16,10 @@ export class BalancerV3 implements IDex {
   ) {
     this.totalWeight = this.token0Weight + this.token1Weight;
     this.invariant = this.calculateInvariant();
+
+    this.name = `${this.token0}/${this.token1}-${this.token0Weight * 100}:${
+      this.token1Weight * 100
+    }`;
   }
 
   /**
