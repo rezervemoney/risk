@@ -1,22 +1,20 @@
 import { IDex } from "./base";
 
+interface IPosition {
+  minTick: number;
+  maxTick: number;
+  liquidity: number;
+}
+
 export class UniswapV3 implements IDex {
-  public k: number;
-
   constructor(
-    public token0Reserve: number,
-    public token1Reserve: number,
     public token0: string,
-    public token1: string
+    public token1: string,
+    public fee: number,
+    public sqrtPriceX96: number,
+    public positions: IPosition[]
   ) {
-    this.k = this.token0Reserve * this.token1Reserve;
-  }
-
-  getReserves() {
-    return {
-      token0: this.token0Reserve,
-      token1: this.token1Reserve,
-    };
+    // todo
   }
 
   swap(
@@ -28,32 +26,14 @@ export class UniswapV3 implements IDex {
     newFromTokenPrice: number;
     newToTokenPrice: number;
   } {
-    this.token0Reserve -= fromTokenAmount;
-    const newtoken1InPool = this.k / this.token0Reserve;
-    const amountOut = newtoken1InPool - this.token1Reserve;
-
-    if (toToken === this.token1 && fromToken === this.token0) {
-      return {
-        toTokenReceived: amountOut,
-        newFromTokenPrice: this.token0Reserve / this.token1Reserve,
-        newToTokenPrice: this.token1Reserve / this.token0Reserve,
-      };
-    }
-
-    if (toToken === this.token0 && fromToken === this.token1) {
-      return {
-        toTokenReceived: amountOut,
-        newFromTokenPrice: this.token0Reserve / this.token1Reserve,
-        newToTokenPrice: this.token1Reserve / this.token0Reserve,
-      };
-    }
-
-    throw new Error(`invalid swap`);
+    throw new Error("Method not implemented.");
   }
 
   price(token: string): number {
-    if (token === this.token0) return this.token0Reserve / this.token1Reserve;
-    if (token === this.token1) return this.token1Reserve / this.token0Reserve;
-    throw new Error(`invalid price`);
+    throw new Error("Method not implemented.");
+  }
+
+  getReserves(): { token0: number; token1: number } {
+    throw new Error("Method not implemented.");
   }
 }

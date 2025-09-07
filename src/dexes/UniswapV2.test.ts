@@ -144,6 +144,12 @@ describe("UniswapV2", () => {
       );
     });
 
+    it("should throw error when swapping to the same token", () => {
+      expect(() => uniswapV2.swap(token0, 100, token0)).toThrow(
+        "Cannot swap to the same token"
+      );
+    });
+
     it("should handle zero amount swap", () => {
       const result = uniswapV2.swap(token0, 0, token1);
       expect(result.toTokenReceived).toBe(0);
@@ -170,8 +176,9 @@ describe("UniswapV2", () => {
       const result = equalReserveUniswap.swap(token0, 100, token1);
 
       expect(result.toTokenReceived).toBeGreaterThan(0);
-      expect(result.newFromTokenPrice).toBeCloseTo(1.1, 1);
-      expect(result.newToTokenPrice).toBeCloseTo(0.909, 2);
+      // After swapping 100 token0 for token1: new reserves are 1100 token0, ~909.09 token1
+      expect(result.newFromTokenPrice).toBeCloseTo(1100 / 909.09, 1);
+      expect(result.newToTokenPrice).toBeCloseTo(909.09 / 1100, 2);
     });
 
     it("should handle very large swap amount", () => {
@@ -179,7 +186,8 @@ describe("UniswapV2", () => {
       const result = uniswapV2.swap(token0, largeAmount, token1);
 
       expect(result.toTokenReceived).toBeGreaterThan(0);
-      expect(result.toTokenReceived).toBeLessThan(initialToken1Reserve);
+      // With large swaps, output should be significant but less than total reserves
+      expect(result.toTokenReceived).toBeLessThan(initialToken1Reserve * 0.8);
     });
 
     it("should maintain price relationship after multiple swaps", () => {
