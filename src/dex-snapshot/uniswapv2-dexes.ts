@@ -1,4 +1,4 @@
-import { getUniswapV2TemplateDexSnapshots } from "./uniswapv2Template";
+import { getUniswapV2TemplateDexSnapshots } from "./templates/uniswapv2";
 import { IDex } from "../dexes/base";
 import { POOL_CONFIGS, Source } from "./pools";
 

@@ -1,5 +1,5 @@
 import { IDex } from "../dexes/base";
-import { getBalancerTemplateSnapshot } from "./balancerTemplate";
+import { getBalancerTemplateSnapshot } from "./templates/balancer";
 import { POOL_CONFIGS, Source } from "./pools";
 
 export async function getBalancerV3DexSnapshots(): Promise<IDex[]> {

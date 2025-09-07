@@ -14,23 +14,23 @@ async function demonstrateAggregator() {
 
     // Create price oracle with current market prices
     const priceOracle = new SimplePriceOracle({
-      RZR: 1.0,
-      USDC: 1.0,
-      USDT: 1.0,
+      crvUSD: 1.0,
       DAI: 1.0,
-      WETH: 3000.0,
-      ETH: 3000.0,
-      wstETH: 3100.0,
-      rETH: 3050.0,
-      weETH: 3150.0,
       eBTC: 95000.0,
+      ETH: 3000.0,
       ETHFI: 4.5,
       frxETH: 3000.0,
-      crvUSD: 1.0,
-      scUSD: 1.0,
       lstRZR: 1.1,
-      stS: 0.95,
+      rETH: 3050.0,
+      RZR: 1.0,
       scBTC: 95000.0,
+      scUSD: 1.0,
+      stS: 0.95,
+      USDC: 1.0,
+      USDT: 1.0,
+      weETH: 3150.0,
+      WETH: 3000.0,
+      wstETH: 3100.0,
     });
 
     // Initialize aggregator

@@ -1,5 +1,5 @@
-import { BalancerV3 } from "../dexes/BalancerV3";
-import { IDex } from "../dexes/base";
+import { BalancerV3 } from "../../dexes/BalancerV3";
+import { IDex } from "../../dexes/base";
 import axios from "axios";
 
 interface PoolDataResponse {

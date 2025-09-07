@@ -1,9 +1,9 @@
-import { Chain, getContract } from "../helpers/contracts";
+import { Chain, getContract } from "../../helpers/contracts";
 import { formatUnits } from "ethers";
-import { IDex } from "../dexes/base";
-import { PoolConfig } from "./pools";
-import { UniswapV2 } from "../dexes/UniswapV2";
-import UniswapV2PoolABI from "./abis/UniswapV2Pool.json";
+import { IDex } from "../../dexes/base";
+import { PoolConfig } from "../pools";
+import { UniswapV2 } from "../../dexes/UniswapV2";
+import UniswapV2PoolABI from "../abis/UniswapV2Pool.json";
 
 export async function getUniswapV2TemplateDexSnapshots(
   name: string,
