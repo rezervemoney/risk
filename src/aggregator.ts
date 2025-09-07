@@ -12,6 +12,19 @@ export class Aggregator {
     });
   }
 
+  async executeBestSwap(
+    fromToken: string,
+    fromTokenAmount: number,
+    toToken: string
+  ) {
+    const price = await this.dexes.map((dex) =>
+      dex.swap(fromToken, fromTokenAmount, toToken)
+    );
+    return price.reduce((a, b) =>
+      a.toTokenReceived > b.toTokenReceived ? a : b
+    );
+  }
+
   async getRzrPriceAveraged() {
     const price = await this.dexes.map((dex) => dex.price("RZR"));
     return price.reduce((a, b) => a + b, 0) / price.length;
