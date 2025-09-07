@@ -24,6 +24,7 @@ export async function getBalancerTemplateSnapshot(
   ids: string[],
   chain: "MAINNET" | "SONIC"
 ): Promise<IDex[]> {
+  console.log(`fetching pool info for ${name} on ${chain}`);
   const idsJoined = ids.map((p) => `"${p}"`).join(",");
   const query = `{
     poolGetPools(where: { chainIn: ${chain}, idIn: [${idsJoined}] }) {

@@ -1,10 +1,14 @@
 import assert from "assert";
 import { IDex } from "../dexes/base";
-import { getBalancerV3DexSnapshots } from "./balancerv3";
-import { getBeetsDexSnapshots } from "./beets";
-import { getUniswapV2DexSnapshots } from "./uniswapv2";
-import { getShadowDexSnapshots } from "./shadow";
-import { getEqualizerDexSnapshots } from "./equalizer";
+import {
+  getBalancerV3DexSnapshots,
+  getBeetsDexSnapshots,
+} from "./balancerv3-dexes";
+import {
+  getUniswapV2DexSnapshots,
+  getShadowDexSnapshots,
+  getEqualizerDexSnapshots,
+} from "./uniswapv2-dexes";
 
 export const getDexSnapshots = async () => {
   const balancerv3 = await getBalancerV3DexSnapshots();

@@ -1,5 +1,5 @@
+import { Chain, getContract } from "../helpers/contracts";
 import { formatUnits } from "ethers";
-import { Chain, getContract } from "./contracts";
 import { IDex } from "../dexes/base";
 import { PoolConfig } from "./pools";
 import { UniswapV2 } from "../dexes/UniswapV2";
@@ -10,6 +10,7 @@ export async function getUniswapV2TemplateDexSnapshots(
   chain: Chain,
   pools: PoolConfig[]
 ): Promise<IDex[]> {
+  console.log(`fetching pool info for ${name} on ${chain}`);
   const dexes: IDex[] = [];
   for (const pool of pools) {
     const poolC = getContract(pool.marketAddress, UniswapV2PoolABI, chain);

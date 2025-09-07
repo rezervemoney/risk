@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getBalancerV3DexSnapshots } from "./balancerv3";
+import { getBalancerV3DexSnapshots } from "./balancerv3-dexes";
 import { BalancerV3 } from "../dexes/BalancerV3";
 
 // Mock axios
