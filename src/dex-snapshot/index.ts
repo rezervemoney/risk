@@ -16,11 +16,7 @@ export const getDexSnapshots = async () => {
 };
 
 export class DexSnapshot {
-  private dexes: IDex[];
-
-  constructor() {
-    this.dexes = [];
-  }
+  private dexes: IDex[] = [];
 
   async loadSnapshots() {
     assert(this.dexes.length === 0, "Snapshots already loaded");
@@ -36,11 +32,17 @@ export class DexSnapshot {
       const reserves = dex.getReserves();
       const token0 = dex.token0;
       const token1 = dex.token1;
+      const token0Price = dex.price(token1);
+      const token1Price = dex.price(token0);
       return {
         name: dex.name,
         reserves: {
           [token0]: reserves.token0,
           [token1]: reserves.token1,
+        },
+        prices: {
+          [token0]: token0Price,
+          [token1]: token1Price,
         },
       };
     });
